@@ -1,6 +1,6 @@
 package models;
-import java.time.LocalDate;
 import enums.Role;
+import java.time.LocalDate;
 import utils.HashUtility;
 
 public class User {
@@ -13,7 +13,7 @@ public class User {
     protected String username;
     protected String password;
 
-    public User(String name, String cnic, LocalDate dateOfBirth, String phoneNo,
+    public User(String name, String cnic, String dateOfBirth, String phoneNo,
             String address, Role userRole, String username, String password) {
 
         setName(name);
@@ -40,14 +40,20 @@ public class User {
         this.cnic = cnic;
     }
 
-    private void setDateOfBirth(LocalDate dateOfBirth) {
+    private void setDateOfBirth(String dateOfBirth) {
         if (dateOfBirth == null) {
             throw new IllegalArgumentException("Date of birth cannot be null.");
         }
-        if (dateOfBirth.isAfter(LocalDate.now())) {
+        LocalDate dob;
+        try {
+            dob = LocalDate.parse(dateOfBirth);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Date of birth must be in the format YYYY-MM-DD.");
+        }
+        if (dob.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Date of birth cannot be in the future.");
         }
-        this.dateOfBirth = dateOfBirth;
+        this.dateOfBirth = dob;
     }
 
     public void setPhoneNo(String phoneNo) {
