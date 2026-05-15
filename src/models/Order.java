@@ -1,0 +1,87 @@
+package models;
+import enums.OrderStatus;
+import enums.OrderType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Date;
+import models.User;
+import models.MenuItem;
+
+
+class Order{
+    private Date orderDate;
+    private String orderID;
+    private List<OrderItem> orderItems;
+    private double totalPrice;
+    private OrderType orderType;
+    private User user;
+    private String customerName;
+    private String customerContact;
+    private String deliveryAddress;
+    private OrderStatus orderStatus;
+
+    public Order(String orderID, User user, OrderType orderType, String customerName, String customerContact, String deliveryAddress) {
+        this.orderDate = new Date();
+        this.orderID = orderID;
+        this.user = user;
+        this.orderType = orderType;
+        this.customerName = customerName;
+        this.customerContact = customerContact;
+        this.deliveryAddress = deliveryAddress;
+        this.orderItems = new ArrayList<>();
+        this.totalPrice = 0.0;
+        this.orderStatus = OrderStatus.PENDING;
+    }
+
+    public void addOrderItem(MenuItem menuItem) {
+        for (OrderItem item : orderItems) {
+            if (item.getMenuItem().getID().equals(menuItem.getID())) {
+                item.incrementQuantity();
+                totalPrice += menuItem.getPrice();
+                return;
+            }
+        }
+        OrderItem newItem = new OrderItem(menuItem);
+        orderItems.add(newItem);
+        totalPrice += menuItem.getPrice();
+    }
+    public void removeOrderItem(int index) {
+        if (index > 0 && index < orderItems.size()) {
+            index--;
+            OrderItem item = orderItems.get(index);
+            totalPrice -= item.getSubTotal();
+            orderItems.remove(index);
+        }
+    }
+    public void decrementOrderItem(int index) {
+        if (index > 0 && index < orderItems.size()) {
+            index--;
+            OrderItem item = orderItems.get(index);
+            item.decrementQuantity();
+            totalPrice -= item.getMenuItem().getPrice();
+        }
+    }
+    public void cancelOrder() {
+        this.orderStatus = OrderStatus.CANCELLED;
+    }
+    public void completeOrder() {
+        this.orderStatus = OrderStatus.COMPLETED;
+    }
+    public void outForDelivery() {
+        this.orderStatus = OrderStatus.OUT_FOR_DELIVERY;
+    }
+    public void prepareOrder() {
+        this.orderStatus = OrderStatus.PREPARING;
+    }
+
+    public OrderType getOrderType() {return orderType;}
+    public String getOrderID() {return orderID;}
+    public List<OrderItem> getOrderItems() {return orderItems;}
+    public double getTotalPrice() {return totalPrice;}
+    public String getCustomerName() {return customerName;}
+    public String getCustomerContact() {return customerContact;}
+    public String getDeliveryAddress() {return deliveryAddress;}
+    public OrderStatus getOrderStatus() {return orderStatus;}
+    public Date getOrderDate() {return orderDate;}
+
+}
