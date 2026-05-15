@@ -2,10 +2,8 @@ package models;
 import enums.OrderStatus;
 import enums.OrderType;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Date;
-import models.User;
-import models.MenuItem;
+import java.util.List;
 
 
 class Order{
@@ -31,6 +29,40 @@ class Order{
         this.orderItems = new ArrayList<>();
         this.totalPrice = 0.0;
         this.orderStatus = OrderStatus.PENDING;
+    }
+
+    public void setOrderType(OrderType orderType) {
+        if(orderType != null){
+            this.orderType = orderType;
+        } else {
+            throw new IllegalArgumentException("Order type cannot be null.");
+        }
+    }
+    public void setCustomerName(String customerName) {
+        if(customerName != null && !customerName.trim().isEmpty()){
+            this.customerName = customerName;
+        } else {
+            throw new IllegalArgumentException("Customer name cannot be null or empty.");
+        }
+    }
+    public void setCustomerContact(String customerContact) {
+        if(customerContact != null && !customerContact.trim().isEmpty()){
+            this.customerContact = customerContact;
+        } else {
+            throw new IllegalArgumentException("Customer contact cannot be null or empty.");
+        }
+    }
+    public void setDeliveryAddress(String deliveryAddress) {
+        
+        if(this.orderType == OrderType.DELIVERY){
+            if(deliveryAddress != null && !deliveryAddress.trim().isEmpty()){
+                this.deliveryAddress = deliveryAddress;
+            } else {
+                throw new IllegalArgumentException("Delivery address cannot be null or empty.");
+            }
+        }else{
+            this.deliveryAddress = "";
+        }
     }
 
     public void addOrderItem(MenuItem menuItem) {
@@ -83,5 +115,6 @@ class Order{
     public String getDeliveryAddress() {return deliveryAddress;}
     public OrderStatus getOrderStatus() {return orderStatus;}
     public Date getOrderDate() {return orderDate;}
+    public String getUserName() {return user.getName();}
 
 }
