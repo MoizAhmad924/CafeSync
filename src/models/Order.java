@@ -12,47 +12,134 @@ class Order{
     private List<OrderItem> orderItems;
     private double totalPrice;
     private OrderType orderType;
-    private User user;
+    private String user;
     private String customerName;
     private String customerContact;
     private String deliveryAddress;
     private OrderStatus orderStatus;
 
-    public Order(String orderID, User user, OrderType orderType, String customerName, String customerContact, String deliveryAddress) {
-        this.orderDate = new Date();
-        this.orderID = orderID;
-        this.user = user;
-        this.orderType = orderType;
-        this.customerName = customerName;
-        this.customerContact = customerContact;
-        this.deliveryAddress = deliveryAddress;
-        this.orderItems = new ArrayList<>();
-        this.totalPrice = 0.0;
-        this.orderStatus = OrderStatus.PENDING;
+    public Order(String user, OrderType orderType, String customerName, String customerContact, String deliveryAddress) {
+        setOrderDate();
+        setOrderID();
+        setUser(user);
+        setOrderType(orderType);
+        setCustomerName(customerName);
+        setCustomerContact(customerContact);
+        setDeliveryAddress(deliveryAddress);
+        setOrderItems();
+        setTotalPrice();
+        setOrderStatus();
     }
 
-    public void setOrderType(OrderType orderType) {
+    public Order(String orderID, Date orderDate, String user, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems, double totalPrice, OrderStatus orderStatus) {
+        setOrderDate(orderDate);
+        setOrderID(orderID);
+        setUser(user);
+        setOrderType(orderType);
+        setCustomerName(customerName);
+        setCustomerContact(customerContact);
+        setDeliveryAddress(deliveryAddress);
+        setOrderItems(orderItems);
+        setTotalPrice(totalPrice);
+        setOrderStatus(orderStatus);
+    }
+
+
+
+
+
+    public void setUser(String user) {
+        if(user != null && !user.trim().isEmpty()){
+            this.user = user;
+        } else {
+            throw new IllegalArgumentException("User cannot be null or empty.");
+        }
+    }
+
+    private void setOrderStatus() {
+        this.orderStatus = OrderStatus.PENDING;
+    }
+    private void setOrderStatus(OrderStatus orderStatus) {
+        if(orderStatus != null){
+            this.orderStatus = orderStatus;
+        } else {
+            throw new IllegalArgumentException("Order status cannot be null.");
+        }
+    }
+
+
+    private  void setTotalPrice() {
+        this.totalPrice = 0.0;
+    }
+    private void setTotalPrice(double totalPrice) {
+        if(totalPrice >= 0){
+            this.totalPrice = totalPrice;
+        } else {
+            throw new IllegalArgumentException("Total price cannot be negative.");
+        }
+    }
+
+
+    private void setOrderDate() {
+        this.orderDate = new Date();
+    }
+    private void setOrderDate(Date orderDate) {
+        if(orderDate != null){
+            this.orderDate = orderDate;
+        } else {
+            throw new IllegalArgumentException("Order date cannot be null.");
+        }
+    }
+
+
+    private void setOrderID(String orderID) {
+        if(orderID != null && !orderID.trim().isEmpty()){
+            this.orderID = orderID;
+        } else {
+            throw new IllegalArgumentException("Order ID missing or invalid.");
+        }
+    }
+    private void setOrderID() {
+        this.orderID = "ORD" + System.currentTimeMillis();
+        }
+    }
+
+
+    private void setOrderItems(List<OrderItem> orderItems) {
+        if(orderItems != null){
+            this.orderItems = orderItems;
+        } else {
+            throw new IllegalArgumentException("Order items cannot be null.");
+        }
+    }
+    private void setOrderItems(){
+        this.orderItems = new ArrayList<>();
+    }
+
+
+    
+    private void setOrderType(OrderType orderType) {
         if(orderType != null){
             this.orderType = orderType;
         } else {
             throw new IllegalArgumentException("Order type cannot be null.");
         }
     }
-    public void setCustomerName(String customerName) {
+    private void setCustomerName(String customerName) {
         if(customerName != null && !customerName.trim().isEmpty()){
             this.customerName = customerName;
         } else {
             throw new IllegalArgumentException("Customer name cannot be null or empty.");
         }
     }
-    public void setCustomerContact(String customerContact) {
+    private void setCustomerContact(String customerContact) {
         if(customerContact != null && !customerContact.trim().isEmpty()){
             this.customerContact = customerContact;
         } else {
             throw new IllegalArgumentException("Customer contact cannot be null or empty.");
         }
     }
-    public void setDeliveryAddress(String deliveryAddress) {
+    private void setDeliveryAddress(String deliveryAddress) {
         
         if(this.orderType == OrderType.DELIVERY){
             if(deliveryAddress != null && !deliveryAddress.trim().isEmpty()){
@@ -115,6 +202,6 @@ class Order{
     public String getDeliveryAddress() {return deliveryAddress;}
     public OrderStatus getOrderStatus() {return orderStatus;}
     public Date getOrderDate() {return orderDate;}
-    public String getUserName() {return user.getName();}
+    public String getUserName() {return user;}
 
 }

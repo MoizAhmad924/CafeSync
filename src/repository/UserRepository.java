@@ -68,6 +68,7 @@ public class UserRepository implements interfaces.CSVRepository<User> {
                 return u;
             }
         }
+        System.out.println("User not found.");
         return null;
     }
 
@@ -82,6 +83,7 @@ public class UserRepository implements interfaces.CSVRepository<User> {
                 return true;
             }
         }
+        System.out.println("User not found.");
         return false;
     }
 
@@ -95,6 +97,7 @@ public class UserRepository implements interfaces.CSVRepository<User> {
                 return true;
             }
         }
+        System.out.println("User not found.");
         rewriteAll(users);
         return false;
     }
@@ -106,6 +109,7 @@ public class UserRepository implements interfaces.CSVRepository<User> {
                 writer.append(serialize(u) + "\n");
             }
         } catch (Exception e) {
+            System.out.println("Error occurred while rewriting users.");
             e.printStackTrace();
         }
     }

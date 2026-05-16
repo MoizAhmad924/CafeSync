@@ -1,7 +1,7 @@
 package models;
 import enums.Category;
 
-class MenuItem{
+public class MenuItem{
     private String itemName;
     private String menuItemID;
     private double price;
