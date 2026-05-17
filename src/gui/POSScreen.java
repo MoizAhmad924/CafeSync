@@ -1,16 +1,14 @@
 package gui;
 
-import models.MenuItem;
-import models.Order;
-import models.User;
-import repository.MenuRepository;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import javax.imageio.ImageIO;
+import javax.swing.*;
+import models.MenuItem;
+import models.Order;
+import models.User;
+import repository.MenuRepository;
 
 public class POSScreen extends JFrame {
     private static final Color BROWN = new Color(44, 30, 22);
@@ -136,10 +134,10 @@ public class POSScreen extends JFrame {
         imgLabel.setForeground(new Color(255, 255, 255, 140));
         banner.add(imgLabel, BorderLayout.CENTER);
 
-        if (item.getImageUrl() != null && item.getImageUrl().startsWith("http")) {
+        if (item.getImageUrl() != null && !item.getImageUrl().trim().isEmpty()) {
             try {
-                java.net.URL url = java.net.URI.create(item.getImageUrl()).toURL();
-                Image img = ImageIO.read(url);
+                ImageIcon OriginalImg = new ImageIcon(item.getImageUrl());
+                Image img = OriginalImg.getImage();
                 if (img != null) {
                     Image scaled = img.getScaledInstance(200, 90, Image.SCALE_SMOOTH);
                     imgLabel.setIcon(new ImageIcon(scaled));
@@ -436,10 +434,9 @@ public class POSScreen extends JFrame {
     }
 
     private void openPaymentScreen() {
-        Order order = new Order(
-                cashier.getUsername(),
+        Order order = new Order(cashier.getUsername(),
                 enums.OrderType.TAKEAWAY,
-                "Walk-in Customer", "00000000000", "");
+                "Walk-in Customer", "00000000000", "", new ArrayList<>());
 
         for (int i = 0; i < cartItems.size(); i++) {
             MenuItem item = cartItems.get(i);

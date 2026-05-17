@@ -1,8 +1,8 @@
 package gui;
 
-import javax.swing.*;
-import java.awt.*;
 import enums.Role;
+import java.awt.*;
+import javax.swing.*;
 import models.User;
 import repository.UserRepository;
 
@@ -177,12 +177,4 @@ public class LoginScreen extends JFrame {
         messageLabel.setForeground(color);
     }
 
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        SwingUtilities.invokeLater(() -> new LoginScreen().setVisible(true));
-    }
 }
