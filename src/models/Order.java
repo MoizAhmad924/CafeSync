@@ -103,7 +103,6 @@ public class Order{
         this.orderID = "ORD" + System.currentTimeMillis();
         }
 
-
     private void setOrderItems(List<OrderItem> orderItems) {
         if(orderItems != null){
             this.orderItems = orderItems;
