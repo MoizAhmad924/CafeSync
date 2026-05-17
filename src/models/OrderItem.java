@@ -1,6 +1,6 @@
 package models;
 
-class OrderItem{
+public class OrderItem{
     private MenuItem menuItem;
     private int quantity;
     private double subTotal;
@@ -8,6 +8,11 @@ class OrderItem{
     public OrderItem(MenuItem menuItem) {
         this.menuItem = menuItem;
         this.quantity = 1;
+        this.subTotal = menuItem.getPrice() * quantity;
+    }
+    public OrderItem(MenuItem menuItem, int quantity) {
+        this.menuItem = menuItem;
+        this.quantity = quantity;
         this.subTotal = menuItem.getPrice() * quantity;
     }
 

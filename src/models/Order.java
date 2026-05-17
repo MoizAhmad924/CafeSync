@@ -1,40 +1,40 @@
 package models;
+
 import enums.OrderStatus;
 import enums.OrderType;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 
-class Order{
+public class Order{
     private Date orderDate;
     private String orderID;
     private List<OrderItem> orderItems;
     private double totalPrice;
     private OrderType orderType;
-    private String user;
+    private String userName;
     private String customerName;
     private String customerContact;
     private String deliveryAddress;
     private OrderStatus orderStatus;
 
-    public Order(String user, OrderType orderType, String customerName, String customerContact, String deliveryAddress) {
+    public Order(String userName, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems) {
         setOrderDate();
         setOrderID();
-        setUser(user);
+        setUserName(userName);
         setOrderType(orderType);
         setCustomerName(customerName);
         setCustomerContact(customerContact);
         setDeliveryAddress(deliveryAddress);
-        setOrderItems();
+        setOrderItems(orderItems);
         setTotalPrice();
         setOrderStatus();
     }
 
-    public Order(String orderID, Date orderDate, String user, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems, double totalPrice, OrderStatus orderStatus) {
+    public Order(String orderID, String orderDate, String userName, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems, double totalPrice, OrderStatus orderStatus) {
         setOrderDate(orderDate);
         setOrderID(orderID);
-        setUser(user);
+        setUserName(userName);
         setOrderType(orderType);
         setCustomerName(customerName);
         setCustomerContact(customerContact);
@@ -48,11 +48,11 @@ class Order{
 
 
 
-    public void setUser(String user) {
-        if(user != null && !user.trim().isEmpty()){
-            this.user = user;
+    public void setUserName(String userName) {
+        if(userName != null && !userName.trim().isEmpty()){
+            this.userName = userName;
         } else {
-            throw new IllegalArgumentException("User cannot be null or empty.");
+            throw new IllegalArgumentException("User name cannot be null or empty.");
         }
     }
 
@@ -83,9 +83,9 @@ class Order{
     private void setOrderDate() {
         this.orderDate = new Date();
     }
-    private void setOrderDate(Date orderDate) {
+    private void setOrderDate(String orderDate) {
         if(orderDate != null){
-            this.orderDate = orderDate;
+            this.orderDate = new Date(orderDate);
         } else {
             throw new IllegalArgumentException("Order date cannot be null.");
         }
@@ -102,7 +102,6 @@ class Order{
     private void setOrderID() {
         this.orderID = "ORD" + System.currentTimeMillis();
         }
-    }
 
 
     private void setOrderItems(List<OrderItem> orderItems) {
@@ -111,9 +110,6 @@ class Order{
         } else {
             throw new IllegalArgumentException("Order items cannot be null.");
         }
-    }
-    private void setOrderItems(){
-        this.orderItems = new ArrayList<>();
     }
 
 
@@ -202,6 +198,6 @@ class Order{
     public String getDeliveryAddress() {return deliveryAddress;}
     public OrderStatus getOrderStatus() {return orderStatus;}
     public Date getOrderDate() {return orderDate;}
-    public String getUserName() {return user;}
+    public String getUserName() {return userName;}
 
 }
