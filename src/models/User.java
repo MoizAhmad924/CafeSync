@@ -23,7 +23,7 @@ public class User {
         setAddress(address);
         setUserRole(userRole);
         setUsername(username);
-        setPassword(password);
+        this.password = password;
     }
 
     private void setName(String name) {

@@ -1,6 +1,6 @@
 package models;
 
-class OrderItem{
+public class OrderItem{
     private MenuItem menuItem;
     private int quantity;
     private double subTotal;
