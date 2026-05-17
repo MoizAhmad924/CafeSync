@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 
-class Order{
+public class Order{
     private Date orderDate;
     private String orderID;
     private List<OrderItem> orderItems;
@@ -101,9 +101,7 @@ class Order{
     }
     private void setOrderID() {
         this.orderID = "ORD" + System.currentTimeMillis();
-        }
     }
-
 
     private void setOrderItems(List<OrderItem> orderItems) {
         if(orderItems != null){
