@@ -11,25 +11,56 @@ import java.util.Scanner;
 import models.MenuItem;
 import models.User;
 import models.OrderItem;
+import models.Order;
 
 public class OrderRepository implements interfaces.CSVRepository<Order> {
 
     private static final String FILE_PATH = "data/orders.csv";
-    private static final String HEADER = "orderID,user, orderType, customerName, customerContact, deliveryAddress";
+    private static final String HEADER = "orderID, Date, userName, orderType, customerName, customerContact, deliveryAddress, orderItems, totalPrice, orderStatus";
 
     // CSV line → Order object
     private Order deserialize(String line) {
         String[] p = line.split(",");
-        return new Order(p[0], p[1], deserializeOrderItems(p[2]), Double.parseDouble(p[3]), OrderStatus.valueOf(p[4]),
-                OrderType.valueOf(p[5]));
+        return new Order(p[0], p[1], p[2], OrderType.valueOf(p[3]), p[4], p[5], p[6], deserializeOrderItems(p[7]), Double.parseDouble(p[8]), OrderStatus.valueOf(p[9]));
     }
+    // OrderItems string → List<OrderItem>
+    private List<OrderItem> deserializeOrderItems(String orderItemsStr) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        String[] items = orderItemsStr.split(";");
+        for(String item : items) {
+            String[] parts = item.split(":");
+            String menuItemID = parts[0];
+            int quantity = Integer.parseInt(parts[1]);
+            MenuItem menuItem = new MenuRepository().findById(menuItemID);
+            if(menuItem != null) {
+                OrderItem orderItem = new OrderItem(menuItem, quantity);
+                orderItems.add(orderItem);
+            }
+        }
+        return orderItems;
+    }
+
+
+
+
 
     // Order object → CSV line
     private String serialize(Order order) {
         return String.join(",",
-                order.getOrderID(), order.getCustomerID(), serializeOrderItems(order.getOrderItems()),
-                String.valueOf(order.getTotalAmount()), order.getOrderStatus().name(), order.getOrderType().name());
+            order.getOrderID(),order.getOrderDate().toString(), order.getUserName(), order.getOrderType().name(), order.getCustomerName(), order.getCustomerContact(), order.getDeliveryAddress(), serializeOrderItems(order.getOrderItems()), String.valueOf(order.getTotalPrice()), order.getOrderStatus().name());
     }
+    // List<OrderItem> → OrderItems string
+    private String serializeOrderItems(List<OrderItem> orderItems) {
+        StringBuilder sb = new StringBuilder();
+        for(OrderItem oi : orderItems) {
+            MenuItem mi = oi.getMenuItem();
+            sb.append(mi.getID()).append(":").append(oi.getQuantity()).append(";");
+        }
+        return sb.toString();
+    }
+
+
+
 
     @Override
     public boolean save(Order order) {

@@ -1,1 +1,2 @@
-orderID,user, orderType, customerName, customerContact, deliveryAddress
+orderID, Date, userName, orderType, customerName, customerContact, deliveryAddress, orderItems, totalPrice, orderStatus
+ORD1779018070003,Sun May 17 16:41:10 PKT 2026,Taiba1,TAKEAWAY,Moiz,1234567890,,M001:2;,0.0,PENDING
