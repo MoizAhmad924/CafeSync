@@ -439,7 +439,7 @@ public class POSScreen extends JFrame {
         Order order = new Order(
                 cashier.getUsername(),
                 enums.OrderType.TAKEAWAY,
-                "Walk-in Customer", "00000000000", "");
+                "Walk-in Customer", "00000000000", "", new ArrayList<>());
 
         for (int i = 0; i < cartItems.size(); i++) {
             MenuItem item = cartItems.get(i);
