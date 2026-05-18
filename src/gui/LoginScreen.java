@@ -169,6 +169,9 @@ public class LoginScreen extends JFrame {
         if (selectedRole == Role.CASHIER) {
             dispose(); // close login window
             new POSScreen(user).setVisible(true);
+        } else if (selectedRole == Role.MANAGER) {
+            dispose(); // close login window
+            new MenuManagement(user).setVisible(true);
         }
     }
 
