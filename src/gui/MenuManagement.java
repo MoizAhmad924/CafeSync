@@ -97,7 +97,7 @@ public class MenuManagement extends JFrame {
 
         JButton analyticsBtn = makeHeaderButton("View Analytics", TEAL);
         analyticsBtn.addActionListener(e -> {
-            // will open analytics screen
+            new AnalyticsScreen(manager).setVisible(true);
         });
 
         JButton logoutBtn = makeHeaderButton("Logout", REMOVE_RED);
@@ -189,7 +189,7 @@ public class MenuManagement extends JFrame {
         metaLbl.setForeground(TEXT_MUTED);
         metaLbl.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel priceLbl = new JLabel(String.format("$%.2f", item.getPrice()));
+        JLabel priceLbl = new JLabel(String.format("PKR %.2f", item.getPrice()));
         priceLbl.setFont(new Font("SansSerif", Font.BOLD, 15));
         priceLbl.setForeground(ACCENT);
         priceLbl.setAlignmentX(LEFT_ALIGNMENT);
@@ -254,7 +254,7 @@ public class MenuManagement extends JFrame {
         fields.setBorder(new EmptyBorder(10, 18, 10, 18));
         fldId = addField(fields, "ITEM ID");
         fldName = addField(fields, "NAME");
-        fldPrice = addField(fields, "PRICE  ($)");
+        fldPrice = addField(fields, "PRICE  (PKR)");
 
         addLabel(fields, "CATEGORY");
         fields.add(Box.createRigidArea(new Dimension(0, 2)));
@@ -395,8 +395,7 @@ public class MenuManagement extends JFrame {
                     }
                 }
                 info("Item \"" + name + "\" updated successfully.");
-            } 
-            else {
+            } else {
                 menuItems.add(item);
                 info("Item \"" + name + "\" added successfully.");
             }
@@ -425,7 +424,7 @@ public class MenuManagement extends JFrame {
         }
     }
 
-        // helpers
+    // helpers
     private JButton makeHeaderButton(String text, Color bg) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("SansSerif", Font.BOLD, 11));

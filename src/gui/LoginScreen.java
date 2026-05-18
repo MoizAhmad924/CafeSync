@@ -170,7 +170,7 @@ public class LoginScreen extends JFrame {
             dispose(); // close login window
             new POSScreen(user).setVisible(true);
         } else if (selectedRole == Role.MANAGER) {
-            dispose(); // close login window
+            dispose();
             new MenuManagement(user).setVisible(true);
         }
     }
