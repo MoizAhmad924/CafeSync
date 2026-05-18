@@ -105,11 +105,11 @@ public class PaymentScreen extends JFrame {
             itemRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
             JLabel itemName = new JLabel(oi.getMenuItem().getItemName()
-                    + "  ×" + oi.getQuantity());
+                    + "  x" + oi.getQuantity());
             itemName.setFont(new Font("SansSerif", Font.PLAIN, 18));
             itemName.setForeground(TEXT_DARK);
 
-            JLabel itemPrice = new JLabel(String.format("$%.2f", oi.getSubTotal()));
+            JLabel itemPrice = new JLabel(String.format("PKR %.2f", oi.getSubTotal()));
             itemPrice.setFont(new Font("SansSerif", Font.PLAIN, 18));
             itemPrice.setForeground(TEXT_MUTED);
 
@@ -136,7 +136,7 @@ public class PaymentScreen extends JFrame {
         totalLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
         totalLbl.setForeground(TEXT_DARK);
 
-        JLabel totalAmt = new JLabel(String.format("$%.2f", order.getTotalPrice()));
+        JLabel totalAmt = new JLabel(String.format("PKR %.2f", order.getTotalPrice()));
         totalAmt.setFont(new Font("SansSerif", Font.BOLD, 22));
         totalAmt.setForeground(ACCENT);
 
@@ -227,7 +227,7 @@ public class PaymentScreen extends JFrame {
                 "<html><b>Payment Successful!</b><br>"
                         + "Method: " + method + "<br>"
                         + "Order: #" + order.getOrderID() + "<br>"
-                        + String.format("Total: $%.2f", order.getTotalPrice()) + "</html>",
+                        + String.format("Total: PKR %.2f", order.getTotalPrice()) + "</html>",
                 "Payment Confirmed",
                 JOptionPane.INFORMATION_MESSAGE);
 

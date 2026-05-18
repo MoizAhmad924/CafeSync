@@ -165,7 +165,7 @@ public class POSScreen extends JFrame {
         metaLbl.setForeground(TEXT_MUTED);
         metaLbl.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel priceLbl = new JLabel(String.format("$%.2f", item.getPrice()));
+        JLabel priceLbl = new JLabel(String.format("PKR %.2f", item.getPrice()));
         priceLbl.setFont(new Font("SansSerif", Font.BOLD, 15));
         priceLbl.setForeground(ACCENT);
         priceLbl.setAlignmentX(LEFT_ALIGNMENT);
@@ -245,7 +245,7 @@ public class POSScreen extends JFrame {
                 BorderFactory.createMatteBorder(1, 0, 0, 0, DIVIDER),
                 BorderFactory.createEmptyBorder(14, 18, 18, 18)));
 
-        totalLabel = new JLabel("Total:  $0.00");
+        totalLabel = new JLabel("Total:  PKR 0.00");
         totalLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         totalLabel.setForeground(TEXT_DARK);
         totalLabel.setAlignmentX(LEFT_ALIGNMENT);
@@ -330,7 +330,7 @@ public class POSScreen extends JFrame {
             cartListPanel.add(empty);
         }
 
-        totalLabel.setText(String.format("Total:  $%.2f", total));
+        totalLabel.setText(String.format("Total:  PKR %.2f", total));
         confirmButton.setEnabled(!cartItems.isEmpty());
 
         cartListPanel.revalidate();
@@ -351,7 +351,7 @@ public class POSScreen extends JFrame {
         nameLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
         nameLbl.setForeground(TEXT_DARK);
 
-        JLabel priceLbl = new JLabel(String.format("$%.2f", item.getPrice()));
+        JLabel priceLbl = new JLabel(String.format("PKR %.2f", item.getPrice()));
         priceLbl.setFont(new Font("SansSerif", Font.PLAIN, 11));
         priceLbl.setForeground(TEXT_MUTED);
 
@@ -362,7 +362,7 @@ public class POSScreen extends JFrame {
         controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
         controls.setBackground(CARD_BG);
 
-        JLabel subtotal = new JLabel(String.format("$%.2f", item.getPrice() * qty));
+        JLabel subtotal = new JLabel(String.format("PKR %.2f", item.getPrice() * qty));
         subtotal.setFont(new Font("SansSerif", Font.BOLD, 12));
         subtotal.setForeground(ACCENT);
         subtotal.setAlignmentX(RIGHT_ALIGNMENT);
