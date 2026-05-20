@@ -85,8 +85,19 @@ public class POSScreen extends JFrame {
             new LoginScreen().setVisible(true);
         });
 
+        JButton orderMgmtBtn = new JButton("Orders");
+        orderMgmtBtn.setFont(new Font("SansSerif", Font.BOLD, 11));
+        orderMgmtBtn.setBackground(ACCENT);
+        orderMgmtBtn.setForeground(Color.WHITE);
+        orderMgmtBtn.setFocusPainted(false);
+        orderMgmtBtn.setBorderPainted(false);
+        orderMgmtBtn.setOpaque(true);
+        orderMgmtBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        orderMgmtBtn.addActionListener(e -> openOrderManagementScreen());
+
         rightPanel.add(cashierLabel);
         rightPanel.add(logoutBtn);
+        rightPanel.add(orderMgmtBtn);
 
         bar.add(logo, BorderLayout.WEST);
         bar.add(rightPanel, BorderLayout.EAST);
@@ -432,6 +443,10 @@ public class POSScreen extends JFrame {
 
     private void openPaymentScreen() {
         new PaymentScreen(orderItems, this).setVisible(true);
+        setVisible(false);
+    }
+    private void openOrderManagementScreen() {
+        new OrderManagementScreen(cashier, this).setVisible(true);
         setVisible(false);
     }
 
