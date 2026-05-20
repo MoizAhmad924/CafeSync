@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import models.MenuItem;
+import models.OrderItem;
 import models.Order;
 import models.User;
 import repository.MenuRepository;
@@ -22,8 +23,7 @@ public class POSScreen extends JFrame {
 
     private final User cashier;
 
-    private final List<MenuItem> cartItems = new ArrayList<>();
-    private final List<Integer> cartQtys = new ArrayList<>();
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     private JPanel cartListPanel;
     private JLabel totalLabel;
@@ -115,7 +115,7 @@ public class POSScreen extends JFrame {
         return scroll;
     }
 
-    private JPanel buildMenuCard(MenuItem item) {
+    private JPanel buildMenuCard(MenuItem menuItem) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(CARD_BG);
@@ -129,14 +129,14 @@ public class POSScreen extends JFrame {
         banner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
         banner.setBackground(new Color(220, 215, 205));
         banner.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        JLabel imgLabel = new JLabel(item.getCategory().name().substring(0, 1), SwingConstants.CENTER);
+        JLabel imgLabel = new JLabel(menuItem.getCategory().name().substring(0, 1), SwingConstants.CENTER);
         imgLabel.setFont(new Font("Serif", Font.BOLD, 36));
         imgLabel.setForeground(new Color(255, 255, 255, 140));
         banner.add(imgLabel, BorderLayout.CENTER);
 
-        if (item.getImageUrl() != null && !item.getImageUrl().trim().isEmpty()) {
+        if (menuItem.getImageUrl() != null && !menuItem.getImageUrl().trim().isEmpty()) {
             try {
-                ImageIcon OriginalImg = new ImageIcon(item.getImageUrl());
+                ImageIcon OriginalImg = new ImageIcon(menuItem.getImageUrl());
                 Image img = OriginalImg.getImage();
                 if (img != null) {
                     Image scaled = img.getScaledInstance(200, 90, Image.SCALE_SMOOTH);
@@ -144,28 +144,28 @@ public class POSScreen extends JFrame {
                     imgLabel.setText("");
                 }
             } catch (Exception e) {
-                System.out.println("Failed to load image for " + item.getItemName());
+                System.out.println("Failed to load image for " + menuItem.getItemName());
             }
         }
 
-        JLabel nameLbl = new JLabel(item.getItemName());
+        JLabel nameLbl = new JLabel(menuItem.getItemName());
         nameLbl.setFont(new Font("SansSerif", Font.BOLD, 14));
         nameLbl.setForeground(TEXT_DARK);
         nameLbl.setAlignmentX(LEFT_ALIGNMENT);
 
         JLabel descLbl = new JLabel(
                 "<html><body style='width:160px;color:#828373'>"
-                        + item.getDescription() + "</body></html>");
+                        + menuItem.getDescription() + "</body></html>");
         descLbl.setFont(new Font("SansSerif", Font.PLAIN, 11));
         descLbl.setAlignmentX(LEFT_ALIGNMENT);
 
         JLabel metaLbl = new JLabel(
-                String.format("Prep: %d min | Serves: %d", item.getPreparationTime(), item.getServingSize()));
+                String.format("Prep: %d min | Serves: %d", menuItem.getPreparationTime(), menuItem.getServingSize()));
         metaLbl.setFont(new Font("SansSerif", Font.ITALIC, 11));
         metaLbl.setForeground(TEXT_MUTED);
         metaLbl.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel priceLbl = new JLabel(String.format("PKR %.2f", item.getPrice()));
+        JLabel priceLbl = new JLabel(String.format("PKR %.2f", menuItem.getPrice()));
         priceLbl.setFont(new Font("SansSerif", Font.BOLD, 15));
         priceLbl.setForeground(ACCENT);
         priceLbl.setAlignmentX(LEFT_ALIGNMENT);
@@ -180,7 +180,7 @@ public class POSScreen extends JFrame {
         addBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
         addBtn.setAlignmentX(LEFT_ALIGNMENT);
         addBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        addBtn.addActionListener(e -> addToCart(item));
+        addBtn.addActionListener(e -> addToCart(menuItem));
 
         card.add(banner);
         card.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -274,38 +274,35 @@ public class POSScreen extends JFrame {
         return panel;
     }
 
-    private void addToCart(MenuItem item) {
-        for (int i = 0; i < cartItems.size(); i++) {
-            if (cartItems.get(i).getID().equals(item.getID())) {
-                cartQtys.set(i, cartQtys.get(i) + 1);
+    private void addToCart(MenuItem menuItem) {
+        for (int i = 0; i < orderItems.size(); i++) {
+            if (orderItems.get(i).getMenuItem().getID().equals(menuItem.getID())) {
+                orderItems.get(i).incrementQuantity();
                 refreshCart();
                 return;
             }
         }
-        cartItems.add(item);
-        cartQtys.add(1);
+        orderItems.add(new OrderItem(menuItem));
         refreshCart();
     }
 
     private void removeFromCart(int index) {
-        cartItems.remove(index);
-        cartQtys.remove(index);
+        orderItems.remove(index);
         refreshCart();
     }
 
     private void changeQty(int index, int delta) {
-        int newQty = cartQtys.get(index) + delta;
+        int newQty = orderItems.get(index).getQuantity() + delta;
         if (newQty <= 0) {
             removeFromCart(index);
         } else {
-            cartQtys.set(index, newQty);
-            refreshCart();
+            orderItems.get(index).setQuantity(newQty);
         }
+        refreshCart();
     }
 
     private void clearCart() {
-        cartItems.clear();
-        cartQtys.clear();
+        orderItems.clear();
         refreshCart();
     }
 
@@ -313,15 +310,15 @@ public class POSScreen extends JFrame {
         cartListPanel.removeAll();
 
         double total = 0;
-        for (int i = 0; i < cartItems.size(); i++) {
-            MenuItem item = cartItems.get(i);
-            int qty = cartQtys.get(i);
-            total += item.getPrice() * qty;
+        for (int i = 0; i < orderItems.size(); i++) {
+            MenuItem item = orderItems.get(i).getMenuItem();
+            int qty = orderItems.get(i).getQuantity();
+            total += orderItems.get(i).getSubTotal();
             cartListPanel.add(buildCartRow(i, item, qty));
             cartListPanel.add(buildDividerLine());
         }
 
-        if (cartItems.isEmpty()) {
+        if (orderItems.isEmpty()) {
             JLabel empty = new JLabel("Your cart is empty");
             empty.setFont(new Font("SansSerif", Font.ITALIC, 13));
             empty.setForeground(TEXT_MUTED);
@@ -331,7 +328,7 @@ public class POSScreen extends JFrame {
         }
 
         totalLabel.setText(String.format("Total:  PKR %.2f", total));
-        confirmButton.setEnabled(!cartItems.isEmpty());
+        confirmButton.setEnabled(!orderItems.isEmpty());
 
         cartListPanel.revalidate();
         cartListPanel.repaint();
@@ -434,18 +431,7 @@ public class POSScreen extends JFrame {
     }
 
     private void openPaymentScreen() {
-        Order order = new Order(cashier.getUsername(),
-                enums.OrderType.TAKEAWAY,
-                "Walk-in Customer", "00000000000", "", new ArrayList<>());
-
-        for (int i = 0; i < cartItems.size(); i++) {
-            MenuItem item = cartItems.get(i);
-            for (int q = 0; q < cartQtys.get(i); q++) {
-                order.addOrderItem(item);
-            }
-        }
-
-        new PaymentScreen(order, this).setVisible(true);
+        new PaymentScreen(orderItems, this).setVisible(true);
         setVisible(false);
     }
 
