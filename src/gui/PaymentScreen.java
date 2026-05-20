@@ -1,11 +1,14 @@
 package gui;
 
+import enums.OrderType;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import javax.swing.*;
 import models.Order;
 import models.OrderItem;
+import repository.OrderRepository;
+import enums.PaymentMethod;
 
 public class PaymentScreen extends JFrame {
     private static final Color BROWN = new Color(44, 30, 22);
@@ -16,8 +19,11 @@ public class PaymentScreen extends JFrame {
     private static final Color ACCENT = new Color(196, 123, 87);
     private static final Color DIVIDER = new Color(230, 225, 218);
 
-    private final Order order;
     private final JFrame parentPOS;
+    private final OrderRepository orderRepo = new OrderRepository();
+    private List<OrderItem> orderItems;
+    private double totalPrice;
+    private String username;
 
     JComboBox<enums.OrderType> orderTypeDropdown;
     JComboBox<enums.PaymentMethod> paymentMethodDropdown;
@@ -29,27 +35,13 @@ public class PaymentScreen extends JFrame {
     private JLabel statusLabel;
 
     public PaymentScreen(List<OrderItem> orderItems, JFrame parentPOS) {
-        String username = ((POSScreen) parentPOS).getCashierUser().getUsername();
-        double total = 0;
-        for (OrderItem item : orderItems) {
-            total += item.getSubTotal();
-        }
-        String orderID = "ORD" + System.currentTimeMillis();
-        String nowStr = java.time.LocalDateTime.now().toString();
-
-        this.order = new Order(
-                orderID,
-                nowStr,
-                username,
-                enums.OrderType.TAKEAWAY,
-                "Walk-in Customer",
-                "N/A",
-                "",
-                orderItems,
-                total,
-                enums.OrderStatus.PENDING);
+        this.username = ((POSScreen) parentPOS).getCashierUser().getUsername();
         this.parentPOS = parentPOS;
-        setTitle("CafeSync — Payment  |  Order #" + order.getOrderID());
+        this.orderItems = orderItems;
+        for (OrderItem oi : orderItems) {
+            totalPrice += oi.getSubTotal();
+        }
+        setTitle("CafeSync — Payment");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(1100, 680);
         setLocationRelativeTo(null);
@@ -85,12 +77,7 @@ public class PaymentScreen extends JFrame {
         title.setFont(new Font("Serif", Font.BOLD, 20));
         title.setForeground(Color.WHITE);
 
-        JLabel orderId = new JLabel("Order #" + order.getOrderID());
-        orderId.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        orderId.setForeground(new Color(200, 180, 160));
-
         bar.add(title, BorderLayout.WEST);
-        bar.add(orderId, BorderLayout.EAST);
         return bar;
     }
 
@@ -210,7 +197,7 @@ public class PaymentScreen extends JFrame {
         summaryCard.add(summaryTitle);
         summaryCard.add(Box.createRigidArea(new Dimension(0, 16)));
 
-        for (OrderItem oi : order.getOrderItems()) {
+        for (OrderItem oi : orderItems) {
             JPanel itemRow = new JPanel(new BorderLayout());
             itemRow.setBackground(CARD_BG);
             itemRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
@@ -247,7 +234,7 @@ public class PaymentScreen extends JFrame {
         totalLbl.setFont(new Font("SansSerif", Font.BOLD, 18));
         totalLbl.setForeground(TEXT_DARK);
 
-        JLabel totalAmt = new JLabel(String.format("PKR %.2f", order.getTotalPrice()));
+        JLabel totalAmt = new JLabel(String.format("PKR %.2f", totalPrice));
         totalAmt.setFont(new Font("SansSerif", Font.BOLD, 20));
         totalAmt.setForeground(ACCENT);
 
@@ -298,7 +285,9 @@ public class PaymentScreen extends JFrame {
         payBtn.setBorderPainted(false);
         payBtn.setOpaque(true);
         payBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        payBtn.addActionListener(e -> processPayment());
+        payBtn.addActionListener(e -> {
+            processPayment();
+        });
 
         footer.add(backBtn, BorderLayout.WEST);
         footer.add(payBtn, BorderLayout.EAST);
@@ -308,12 +297,14 @@ public class PaymentScreen extends JFrame {
     private void processPayment() {
         String customerName = customerNameField.getText().trim();
         String contact = contactField.getText().trim();
-        String orderType = orderTypeDropdown.getSelectedItem().toString();
-        String paymentMethod = paymentMethodDropdown.getSelectedItem().toString();
+        OrderType orderType = (OrderType) orderTypeDropdown.getSelectedItem();
+        PaymentMethod paymentMethod = (PaymentMethod) paymentMethodDropdown.getSelectedItem();
         boolean isOption2 = orderTypeDropdown.getSelectedIndex() == 1;
         String deliveryAddress = isOption2 ? deliveryAddressField.getText().trim() : "N/A";
 
-        order.completeOrder();
+        Order newOrder = new Order(this.username, orderType, customerName.isEmpty() ? "Walk-in Customer" : customerName, contact.isEmpty() ? "N/A" : contact, deliveryAddress, orderItems);
+        orderRepo.save(newOrder);
+
         String addressLine = isOption2
                 ? "<tr><td><b>Delivery Address</b></td><td>" + deliveryAddress + "</td></tr>"
                 : "";
@@ -323,14 +314,14 @@ public class PaymentScreen extends JFrame {
                 + "<body style='font-family:SansSerif; font-size:13px; padding:10px;'>"
                 + "<h2 style='color:#2c1e16; margin-bottom:12px;'>✔ Payment Successful!</h2>"
                 + "<table cellpadding='6' cellspacing='0' style='width:380px;'>"
-                + "<tr><td><b>Order #</b></td><td>" + order.getOrderID() + "</td></tr>"
+                + "<tr><td><b>Order #</b></td><td>" + newOrder.getOrderID() + "</td></tr>"
                 + "<tr><td><b>Customer Name</b></td><td>" + (customerName.isEmpty() ? "—" : customerName) + "</td></tr>"
                 + "<tr><td><b>Contact</b></td><td>" + (contact.isEmpty() ? "—" : contact) + "</td></tr>"
                 + "<tr><td><b>Order Type</b></td><td>" + orderType + "</td></tr>"
                 + addressLine
                 + "<tr><td><b>Payment Method</b></td><td>" + paymentMethod + "</td></tr>"
                 + "<tr><td><b>Total</b></td><td><span style='color:#c47b57; font-size:15px;'>"
-                +     String.format("PKR %.2f", order.getTotalPrice())
+                +     String.format("PKR %.2f", totalPrice)
                 + "</span></td></tr>"
                 + "</table>"
                 + "</body></html>";
