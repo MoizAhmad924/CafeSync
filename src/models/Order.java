@@ -2,12 +2,17 @@ package models;
 
 import enums.OrderStatus;
 import enums.OrderType;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 
 public class Order{
-    private Date orderDate;
+    private LocalDateTime orderDateTime;
+    private LocalDate orderDate;
+    private LocalTime orderTime;
+    
     private String orderID;
     private List<OrderItem> orderItems;
     private double totalPrice;
@@ -19,7 +24,7 @@ public class Order{
     private OrderStatus orderStatus;
 
     public Order(String userName, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems) {
-        setOrderDate();
+        setOrderDateTime();
         setOrderID();
         setUserName(userName);
         setOrderType(orderType);
@@ -31,8 +36,8 @@ public class Order{
         setOrderStatus();
     }
 
-    public Order(String orderID, String orderDate, String userName, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems, double totalPrice, OrderStatus orderStatus) {
-        setOrderDate(orderDate);
+    public Order(String orderID, String orderDateTime, String userName, OrderType orderType, String customerName, String customerContact, String deliveryAddress, List<OrderItem> orderItems, double totalPrice, OrderStatus orderStatus) {
+        setOrderDateTime(orderDateTime);
         setOrderID(orderID);
         setUserName(userName);
         setOrderType(orderType);
@@ -80,14 +85,18 @@ public class Order{
     }
 
 
-    private void setOrderDate() {
-        this.orderDate = new Date();
+    private void setOrderDateTime() {
+        this.orderDateTime = LocalDateTime.now();
+        this.orderDate = orderDateTime.toLocalDate();
+        this.orderTime = orderDateTime.toLocalTime();
     }
-    private void setOrderDate(String orderDate) {
-        if(orderDate != null){
-            this.orderDate = new Date(orderDate);
+    private void setOrderDateTime(String orderDateTime) {
+        if(orderDateTime != null){
+            this.orderDateTime = LocalDateTime.parse(orderDateTime);
+            this.orderDate = this.orderDateTime.toLocalDate();
+            this.orderTime = this.orderDateTime.toLocalTime();
         } else {
-            throw new IllegalArgumentException("Order date cannot be null.");
+            throw new IllegalArgumentException("Order date/time cannot be null.");
         }
     }
 
@@ -196,7 +205,9 @@ public class Order{
     public String getCustomerContact() {return customerContact;}
     public String getDeliveryAddress() {return deliveryAddress;}
     public OrderStatus getOrderStatus() {return orderStatus;}
-    public Date getOrderDate() {return orderDate;}
+    public LocalDateTime getOrderDateTime() {return orderDateTime;}
+    public LocalDate getOrderDate() {return orderDate;}
+    public LocalTime getOrderTime() {return orderTime;}
     public String getUserName() {return userName;}
 
 }

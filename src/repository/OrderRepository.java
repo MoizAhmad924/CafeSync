@@ -1,17 +1,16 @@
 package repository;
 
-import enums.Category;
 import enums.OrderStatus;
 import enums.OrderType;
 import java.io.File;
 import java.io.FileWriter;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import models.MenuItem;
-import models.User;
-import models.OrderItem;
 import models.Order;
+import models.OrderItem;
 
 public class OrderRepository implements interfaces.CSVRepository<Order> {
 
@@ -95,6 +94,18 @@ public class OrderRepository implements interfaces.CSVRepository<Order> {
             e.printStackTrace();
         }
         return new ArrayList<>();
+    }
+
+    public List<Order> findOrdersInRange(LocalDate start, LocalDate end) {
+        List<Order> allOrders = findAll();
+        List<Order> ordersInRange = new ArrayList<>();
+        for (Order o : allOrders) {
+            if (!o.getOrderDate().isBefore(start) && !o.getOrderDate().isAfter(end)) {
+                ordersInRange.add(o);
+            }
+        }
+        return ordersInRange;
+        
     }
 
     @Override
