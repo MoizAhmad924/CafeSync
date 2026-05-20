@@ -1,13 +1,11 @@
 package gui;
 
-import models.Order;
-import models.OrderItem;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
-import enums.OrderType;
-import enums.OrderStatus;
+import javax.swing.*;
+import models.Order;
+import models.OrderItem;
 
 public class PaymentScreen extends JFrame {
     private static final Color BROWN = new Color(44, 30, 22);
@@ -21,8 +19,13 @@ public class PaymentScreen extends JFrame {
     private final Order order;
     private final JFrame parentPOS;
 
-    private ButtonGroup methodGroup;
-    private JRadioButton cashBtn, cardBtn;
+    JComboBox<enums.OrderType> orderTypeDropdown;
+    JComboBox<enums.PaymentMethod> paymentMethodDropdown;
+    private JTextField customerNameField;
+    private JTextField contactField;
+    private JTextField deliveryAddressField;
+    private JLabel deliveryAddressLabel;
+    private JPanel deliveryAddressPanel;
     private JLabel statusLabel;
 
     public PaymentScreen(List<OrderItem> orderItems, JFrame parentPOS) {
@@ -97,7 +100,6 @@ public class PaymentScreen extends JFrame {
         wrapper.setBackground(BEIGE);
         wrapper.setBorder(BorderFactory.createEmptyBorder(24, 32, 24, 32));
 
-        // LEFT COLUMN
         JPanel leftCol = new JPanel();
         leftCol.setLayout(new BoxLayout(leftCol, BoxLayout.Y_AXIS));
         leftCol.setBackground(BEIGE);
@@ -118,18 +120,50 @@ public class PaymentScreen extends JFrame {
         customerCard.add(customerTitle);
         customerCard.add(Box.createRigidArea(new Dimension(0, 16)));
 
-        customerCard.add(buildInfoRow("CUSTOMER NAME", "-"));
+        // Customer Name
+        customerCard.add(buildFieldLabel("CUSTOMER NAME"));
+        customerNameField = buildStyledTextField("Enter customer name");
+        customerCard.add(customerNameField);
         customerCard.add(buildDivider());
-        customerCard.add(buildInfoRow("CONTACT", "-"));
-        customerCard.add(buildDivider());
-        customerCard.add(buildInfoRow("ORDER TYPE", "-"));
-        customerCard.add(buildDivider());
-        customerCard.add(buildInfoRow("DELIVERY ADDRESS", "-"));
 
-        // Limit the vertical stretch
-        customerCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
+        // Contact
+        customerCard.add(buildFieldLabel("CONTACT"));
+        contactField = buildStyledTextField("Enter contact number");
+        customerCard.add(contactField);
+        customerCard.add(buildDivider());
 
-        // Payment method card
+        // Order Type dropdown
+        customerCard.add(buildFieldLabel("ORDER TYPE"));
+        orderTypeDropdown = buildOrderTypeDropdown(enums.OrderType.values());
+        orderTypeDropdown.setAlignmentX(Component.LEFT_ALIGNMENT);
+        customerCard.add(orderTypeDropdown);
+
+        // Delivery address when delivery is selected
+        customerCard.add(Box.createRigidArea(new Dimension(0, 10)));
+        deliveryAddressPanel = new JPanel();
+        deliveryAddressPanel.setLayout(new BoxLayout(deliveryAddressPanel, BoxLayout.Y_AXIS));
+        deliveryAddressPanel.setBackground(CARD_BG);
+        deliveryAddressPanel.setAlignmentX(LEFT_ALIGNMENT);
+
+        deliveryAddressLabel = buildFieldLabel("DELIVERY ADDRESS");
+        deliveryAddressField = buildStyledTextField("Enter delivery address");
+        deliveryAddressPanel.add(buildDivider());
+        deliveryAddressPanel.add(deliveryAddressLabel);
+        deliveryAddressPanel.add(deliveryAddressField);
+
+        deliveryAddressPanel.setVisible(false);   // hidden by default
+        customerCard.add(deliveryAddressPanel);
+
+        orderTypeDropdown.addActionListener(e -> {
+            boolean isOption2 = orderTypeDropdown.getSelectedIndex() == 1;
+            deliveryAddressPanel.setVisible(isOption2);
+            customerCard.revalidate();
+            customerCard.repaint();
+        });
+
+        customerCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 380));
+
+        // Payment Method 
         JPanel methodCard = new JPanel();
         methodCard.setLayout(new BoxLayout(methodCard, BoxLayout.Y_AXIS));
         methodCard.setBackground(CARD_BG);
@@ -143,28 +177,20 @@ public class PaymentScreen extends JFrame {
         methodTitle.setForeground(TEXT_DARK);
         methodTitle.setAlignmentX(LEFT_ALIGNMENT);
         methodCard.add(methodTitle);
-        methodCard.add(Box.createRigidArea(new Dimension(0, 16)));
+        methodCard.add(Box.createRigidArea(new Dimension(0, 14)));
 
-        methodGroup = new ButtonGroup();
-        cashBtn = styledRadio(" Cash");
-        cardBtn = styledRadio(" Card / Debit");
-        cashBtn.setSelected(true);
+        paymentMethodDropdown = buildPaymentMethodDropdown(enums.PaymentMethod.values());
+        paymentMethodDropdown.setAlignmentX(Component.LEFT_ALIGNMENT);
+        methodCard.add(paymentMethodDropdown);
 
-        methodGroup.add(cashBtn);
-        methodGroup.add(cardBtn);
-
-        methodCard.add(cashBtn);
-        methodCard.add(Box.createRigidArea(new Dimension(0, 8)));
-        methodCard.add(cardBtn);
-
-        methodCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
+        methodCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
 
         leftCol.add(customerCard);
         leftCol.add(Box.createRigidArea(new Dimension(0, 20)));
         leftCol.add(methodCard);
         leftCol.add(Box.createVerticalGlue());
 
-        // RIGHT COLUMN
+        //order summary
         JPanel rightCol = new JPanel();
         rightCol.setLayout(new BoxLayout(rightCol, BoxLayout.Y_AXIS));
         rightCol.setBackground(BEIGE);
@@ -255,7 +281,7 @@ public class PaymentScreen extends JFrame {
                 BorderFactory.createMatteBorder(1, 0, 0, 0, DIVIDER),
                 BorderFactory.createEmptyBorder(14, 32, 18, 32)));
 
-        JButton backBtn = new JButton("← Back to Cart");
+        JButton backBtn = new JButton("Back to Cart");
         backBtn.setFont(new Font("SansSerif", Font.PLAIN, 13));
         backBtn.setBackground(BEIGE);
         backBtn.setForeground(TEXT_DARK);
@@ -280,16 +306,44 @@ public class PaymentScreen extends JFrame {
     }
 
     private void processPayment() {
-        String method = cashBtn.isSelected() ? "Cash" : "Card/Debit";
+        String customerName = customerNameField.getText().trim();
+        String contact = contactField.getText().trim();
+        String orderType = orderTypeDropdown.getSelectedItem().toString();
+        String paymentMethod = paymentMethodDropdown.getSelectedItem().toString();
+        boolean isOption2 = orderTypeDropdown.getSelectedIndex() == 1;
+        String deliveryAddress = isOption2 ? deliveryAddressField.getText().trim() : "N/A";
+
         order.completeOrder();
-        JOptionPane.showMessageDialog(
-                this,
-                "<html><b>Payment Successful!</b><br>"
-                        + "Method: " + method + "<br>"
-                        + "Order: #" + order.getOrderID() + "<br>"
-                        + String.format("Total: PKR %.2f", order.getTotalPrice()) + "</html>",
-                "Payment Confirmed",
-                JOptionPane.INFORMATION_MESSAGE);
+        String addressLine = isOption2
+                ? "<tr><td><b>Delivery Address</b></td><td>" + deliveryAddress + "</td></tr>"
+                : "";
+
+        String message =
+                "<html>"
+                + "<body style='font-family:SansSerif; font-size:13px; padding:10px;'>"
+                + "<h2 style='color:#2c1e16; margin-bottom:12px;'>✔ Payment Successful!</h2>"
+                + "<table cellpadding='6' cellspacing='0' style='width:380px;'>"
+                + "<tr><td><b>Order #</b></td><td>" + order.getOrderID() + "</td></tr>"
+                + "<tr><td><b>Customer Name</b></td><td>" + (customerName.isEmpty() ? "—" : customerName) + "</td></tr>"
+                + "<tr><td><b>Contact</b></td><td>" + (contact.isEmpty() ? "—" : contact) + "</td></tr>"
+                + "<tr><td><b>Order Type</b></td><td>" + orderType + "</td></tr>"
+                + addressLine
+                + "<tr><td><b>Payment Method</b></td><td>" + paymentMethod + "</td></tr>"
+                + "<tr><td><b>Total</b></td><td><span style='color:#c47b57; font-size:15px;'>"
+                +     String.format("PKR %.2f", order.getTotalPrice())
+                + "</span></td></tr>"
+                + "</table>"
+                + "</body></html>";
+
+        JLabel msgLabel = new JLabel(message);
+        JOptionPane pane = new JOptionPane(msgLabel,
+                JOptionPane.INFORMATION_MESSAGE,
+                JOptionPane.DEFAULT_OPTION);
+        JDialog dialog = pane.createDialog(this, "Payment Confirmed");
+        dialog.setPreferredSize(new Dimension(500, 400));
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
 
         models.User cashier = ((POSScreen) parentPOS).getCashierUser();
         dispose();
@@ -302,40 +356,68 @@ public class PaymentScreen extends JFrame {
         parentPOS.setVisible(true);
     }
 
-    // helpers
-    private JPanel buildInfoRow(String label, String value) {
-        JPanel row = new JPanel(new BorderLayout());
-        row.setBackground(CARD_BG);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        row.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
 
-        JLabel lbl = new JLabel(label);
+    private JLabel buildFieldLabel(String text) {
+        JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
         lbl.setForeground(TEXT_DARK);
-
-        JLabel val = new JLabel(value);
-        val.setFont(new Font("SansSerif", Font.ITALIC, 14));
-        val.setForeground(TEXT_MUTED);
-
-        row.add(lbl, BorderLayout.WEST);
-        row.add(val, BorderLayout.EAST);
-        return row;
+        lbl.setAlignmentX(LEFT_ALIGNMENT);
+        lbl.setBorder(BorderFactory.createEmptyBorder(6, 0, 4, 0));
+        return lbl;
     }
+
+    private JTextField buildStyledTextField(String placeholder) {
+        JTextField field = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (getText().isEmpty() && !isFocusOwner()) {
+                    Graphics2D g2 = (Graphics2D) g;
+                    g2.setColor(new Color(180, 165, 155));
+                    g2.setFont(getFont().deriveFont(Font.ITALIC));
+                    Insets ins = getInsets();
+                    g2.drawString(placeholder, ins.left + 2, getHeight() / 2 + g2.getFontMetrics().getAscent() / 2 - 2);
+                }
+            }
+        };
+        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setForeground(TEXT_DARK);
+        field.setBackground(CARD_BG);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(DIVIDER),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        field.setAlignmentX(LEFT_ALIGNMENT);
+        return field;
+    }
+
+    private JComboBox<enums.OrderType> buildOrderTypeDropdown(enums.OrderType[] options) {
+    JComboBox<enums.OrderType> cb = new JComboBox<>(options); 
+    cb.setFont(new Font("SansSerif", Font.PLAIN, 14));
+    cb.setForeground(TEXT_DARK);
+    cb.setBackground(CARD_BG);
+    cb.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+    cb.setFocusable(false);
+    cb.setBorder(BorderFactory.createLineBorder(DIVIDER));
+    return cb;
+}
+
+private JComboBox<enums.PaymentMethod> buildPaymentMethodDropdown(enums.PaymentMethod[] options) {
+    JComboBox<enums.PaymentMethod> cb = new JComboBox<>(options);
+    cb.setFont(new Font("SansSerif", Font.PLAIN, 14));
+    cb.setForeground(TEXT_DARK);
+    cb.setBackground(CARD_BG);
+    cb.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+    cb.setFocusable(false);
+    cb.setBorder(BorderFactory.createLineBorder(DIVIDER));
+    return cb;
+}
 
     private JPanel buildDivider() {
         JPanel div = new JPanel();
         div.setBackground(DIVIDER);
         div.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        div.setAlignmentX(LEFT_ALIGNMENT);
         return div;
-    }
-
-    private JRadioButton styledRadio(String text) {
-        JRadioButton rb = new JRadioButton(text);
-        rb.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        rb.setForeground(TEXT_DARK);
-        rb.setBackground(CARD_BG);
-        rb.setFocusPainted(false);
-        rb.setAlignmentX(LEFT_ALIGNMENT);
-        return rb;
     }
 }
