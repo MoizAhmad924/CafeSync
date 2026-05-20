@@ -8,8 +8,8 @@ import repository.MenuRepository;
 
 public class Main {
     public static void main(String[] args) {
-        MenuItem item1 = new MenuItem("Shawarma", "M002", 280.0, "Chicken Shawarma wrapped in our inhouse pita",
-                Category.MAIN_COURSE, "data/MenuImgs/M002.jpg", 8, 1);
+        MenuItem item1 = new MenuItem("Pizza", "M003", 700.0, "Cheesy Chicken Pizza",
+                Category.MAIN_COURSE, "data/MenuImgs/M003.jpg", 15, 1);
         MenuRepository menuRepo = new MenuRepository();
         if (menuRepo.findById(item1.getID()) == null) {
             menuRepo.save(item1);
