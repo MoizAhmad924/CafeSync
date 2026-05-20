@@ -176,11 +176,11 @@ public class AnalyticsScreen extends JFrame {
         String avgSign     = avgChange >= 0 ? "+" : "";
         String ordSign     = ordersChange >= 0 ? "+" : "";
 
-        row.add(kpiCard("Total Revenue",   String.format("$%.2f", totalRevenue),
+        row.add(kpiCard("Total Revenue",   String.format("%.2f PKR", totalRevenue),
                 revenueSign + String.format("%.0f%%", revenueChange) + " vs last period", TEAL));
         row.add(kpiCard("Total Orders",    String.valueOf(totalOrders),
                 ordSign + ordersChange + " vs last period", AMBER));
-        row.add(kpiCard("Avg Order Value", String.format("$%.2f", avgOrder),
+        row.add(kpiCard("Avg Order Value", String.format("%.2f PKR", avgOrder),
                 avgSign + String.format("%.0f%%", avgChange) + " vs last period", ROSE));
         row.add(kpiCard("Top Item",        topItem,
                 topItemUnits + " units sold", SAGE));
@@ -228,7 +228,7 @@ public class AnalyticsScreen extends JFrame {
 
         int[] revenueData   = analytics.getRevenueByDay(currentRange);
         String[] revLabels  = analytics.getRevenueByDayLabels(currentRange);
-        row.add(buildBarChart("Revenue by Day ($)", revenueData, revLabels, TEAL));
+        row.add(buildBarChart("Revenue by Day (PKR)", revenueData, revLabels, TEAL));
 
         int[] hourData      = analytics.getOrdersByHour(currentRange);
         String[] hourLabels = analytics.getOrdersByHourLabels();
