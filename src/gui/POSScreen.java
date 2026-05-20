@@ -136,6 +136,7 @@ public class POSScreen extends JFrame {
 
         // imaage placeholder
         JPanel banner = new JPanel(new BorderLayout());
+        banner.setAlignmentX(Component.LEFT_ALIGNMENT);
         banner.setPreferredSize(new Dimension(0, 90));
         banner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
         banner.setBackground(new Color(220, 215, 205));

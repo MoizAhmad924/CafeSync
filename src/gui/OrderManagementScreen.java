@@ -44,7 +44,7 @@ public class OrderManagementScreen extends JFrame {
         this.parentPOS = parentPOS;
         setTitle("CafeSync — Order Management  |  " + user.getName());
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1200, 800);
+        setSize(1100, 680);
         setLocationRelativeTo(null);
         setResizable(true);
         buildUI();
