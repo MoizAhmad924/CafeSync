@@ -11,9 +11,20 @@ public class MenuItem{
     private boolean isAvailable;
     private int preparationTime;
     private int servingSize;
-    public MenuItem(String itemName, String menuItemID, double price, String description, Category category, String imageUrl, int preparationTime, int servingSize) {
+    public MenuItem(String itemName, double price, String description, Category category, String imageUrl, int preparationTime, int servingSize) {
         setItemName(itemName);
-        this.menuItemID = menuItemID;
+        setMenuItemID();
+        setPrice(price);
+        setDescription(description);
+        setCategory(category);
+        setImageUrl(imageUrl);
+        setIsAvailable();
+        setPreparationTime(preparationTime);
+        setServingSize(servingSize);
+    }
+    public MenuItem(String itemName,String menuItemID, double price, String description, Category category, String imageUrl, int preparationTime, int servingSize) {
+        setItemName(itemName);
+        setMenuItemID(menuItemID);
         setPrice(price);
         setDescription(description);
         setCategory(category);
@@ -88,6 +99,17 @@ public class MenuItem{
             throw new IllegalArgumentException("Serving size cannot be negative.");
         }
         this.servingSize = servingSize;
+    }
+
+    private void setMenuItemID() {
+        this.menuItemID = "MI" + System.currentTimeMillis();
+    }
+    private void setMenuItemID(String menuItemID) {
+        if(menuItemID != null && !menuItemID.trim().isEmpty()){
+            this.menuItemID = menuItemID;
+        } else {
+            throw new IllegalArgumentException("Menu Item ID cannot be null or empty.");
+        }
     }
 
 

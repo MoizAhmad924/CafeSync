@@ -25,6 +25,7 @@ public class MenuManagement extends JFrame {
     private final MenuRepository menuRepo = new MenuRepository();
     private final List<MenuItem> menuItems = new ArrayList<>();
     private boolean editMode = false;
+    private String thisEditingId = null;
 
     private JPanel menuGrid;
     private JTextField fldId;
@@ -235,7 +236,6 @@ public class MenuManagement extends JFrame {
         fields.setLayout(new BoxLayout(fields, BoxLayout.Y_AXIS));
         fields.setBackground(CARD_BG);
         fields.setBorder(new EmptyBorder(10, 18, 10, 18));
-        fldId = addField(fields, "ITEM ID");
         fldName = addField(fields, "NAME");
         fldPrice = addField(fields, "PRICE  (PKR)");
 
@@ -322,9 +322,9 @@ public class MenuManagement extends JFrame {
 
     private void populateFormForEdit(MenuItem item) {
         editMode = true;
+        thisEditingId = item.getID();
         formHeading.setText("Edit Item");
         saveBtn.setText("Update Item");
-        fldId.setText(item.getID());
         fldName.setText(item.getItemName());
         fldPrice.setText(String.valueOf(item.getPrice()));
         fldCategory.setSelectedItem(item.getCategory());
@@ -338,7 +338,6 @@ public class MenuManagement extends JFrame {
         editMode = false;
         formHeading.setText("Add New Item");
         saveBtn.setText("Add Item");
-        fldId.setText("");
         fldName.setText("");
         fldPrice.setText("");
         fldCategory.setSelectedIndex(0);
@@ -350,7 +349,6 @@ public class MenuManagement extends JFrame {
 
     private void saveItem() {
         try {
-            String id = fldId.getText().trim();
             String name = fldName.getText().trim();
             String priceStr = fldPrice.getText().trim();
             String desc = fldDesc.getText().trim();
@@ -358,7 +356,7 @@ public class MenuManagement extends JFrame {
             String prepStr = fldPrepTime.getText().trim();
             String servStr = fldServing.getText().trim();
 
-            if (id.isEmpty() || name.isEmpty() || priceStr.isEmpty() || desc.isEmpty()
+            if (name.isEmpty() || priceStr.isEmpty() || desc.isEmpty()
                     || imageUrl.isEmpty() || prepStr.isEmpty() || servStr.isEmpty()) {
                 showError("Please fill in all fields.");
                 return;
@@ -368,13 +366,12 @@ public class MenuManagement extends JFrame {
             int serving = Integer.parseInt(servStr);
             Category cat = (Category) fldCategory.getSelectedItem();
 
-            MenuItem item = new MenuItem(name, id, price, desc, cat, imageUrl, prep, serving);
-
             if (editMode) {
+                MenuItem item = new MenuItem(name,thisEditingId, price, desc, cat, imageUrl, prep, serving);
                 boolean ok = menuRepo.update(item);
                 if (ok) {
                     for (int i = 0; i < menuItems.size(); i++) {
-                        if (menuItems.get(i).getID().equals(id)) {
+                        if (menuItems.get(i).getID().equals(thisEditingId)) {
                             menuItems.set(i, item);
                             break;
                         }
@@ -385,10 +382,7 @@ public class MenuManagement extends JFrame {
                     return;
                 }
             } else {
-                if (menuRepo.findById(id) != null) {
-                    showError("An item with ID \"" + id + "\" already exists.");
-                    return;
-                }
+                MenuItem item = new MenuItem(name, price, desc, cat, imageUrl, prep, serving);
                 boolean ok = menuRepo.save(item);
                 if (ok) {
                     menuItems.add(item);

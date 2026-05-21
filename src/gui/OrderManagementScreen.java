@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -33,7 +34,7 @@ public class OrderManagementScreen extends JFrame {
     private final User user;
     private List<Order> allOrders;
     private DateRange currentRange = DateRange.TODAY;
-    private String currentStatus = "All";
+    private OrderStatus currentStatus = OrderStatus.PENDING;
     private JPanel ordersPanel;
     private JLabel countLabel;
     private JFrame parentPOS;
@@ -137,9 +138,9 @@ public class OrderManagementScreen extends JFrame {
         row2.add(statusLabel);
 
         ButtonGroup statusButtons = new ButtonGroup();
-        String[] statuses = { "All", "PENDING", "PREPARING", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELLED" };
-        for (String s : statuses) {
-            JToggleButton tb = makeToggleButton(s.equals("OUT_FOR_DELIVERY") ? "Out for Delivery" : capitalize(s));
+        OrderStatus[] statuses = { OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.COMPLETED, OrderStatus.CANCELLED };
+        for (OrderStatus s : statuses) {
+            JToggleButton tb = makeToggleButton(s == OrderStatus.OUT_FOR_DELIVERY ? "Out for Delivery" : capitalize(s.toString()));
             tb.putClientProperty("statusKey", s);
             if (s.equals(currentStatus)) tb.setSelected(true);
             statusButtons.add(tb);
@@ -363,7 +364,14 @@ public class OrderManagementScreen extends JFrame {
                 break;
         }
         List<Order> currentOrders = OrderRepo.findOrdersInRange(startDate, endDate);
-        return currentOrders;
+        List<Order> filtered = new ArrayList<>();
+        for (Order o : currentOrders) {
+            if (o.getOrderStatus() == currentStatus) {
+                filtered.add(o);
+            }
+        }
+
+        return filtered;
     }
 
     private String buildItemsSummary(List<OrderItem> items) {
