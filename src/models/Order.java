@@ -75,7 +75,9 @@ public class Order{
 
 
     private  void setTotalPrice() {
-        this.totalPrice = 0.0;
+        for(OrderItem item : orderItems) {
+            this.totalPrice += item.getSubTotal();
+        }
     }
     private void setTotalPrice(double totalPrice) {
         if(totalPrice >= 0){

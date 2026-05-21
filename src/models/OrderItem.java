@@ -1,7 +1,7 @@
 package models;
 
 public class OrderItem{
-    private MenuItem menuItem;
+    private final MenuItem menuItem;
     private int quantity;
     private double subTotal;
 

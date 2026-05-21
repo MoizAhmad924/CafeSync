@@ -19,7 +19,12 @@ public class OrderRepository implements interfaces.CSVRepository<Order> {
 
     // CSV line → Order object
     private Order deserialize(String line) {
-        String[] p = line.split(",");
+        if (line == null) return null;
+        // limit to 10 parts so remaining commas (if any) go into the last token
+        String[] p = line.split(",", 10);
+        if (p.length < 10) {
+            throw new IllegalArgumentException("Invalid order CSV line: expected 10 columns but found " + p.length);
+        }
         return new Order(p[0], p[1], p[2], OrderType.valueOf(p[3]), p[4], p[5], p[6], deserializeOrderItems(p[7]), Double.parseDouble(p[8]), OrderStatus.valueOf(p[9]));
     }
     // OrderItems string → List<OrderItem>
@@ -86,7 +91,14 @@ public class OrderRepository implements interfaces.CSVRepository<Order> {
             }
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
-                orders.add(deserialize(line));
+                if (line == null || line.trim().isEmpty()) continue; // skip blank lines
+                try {
+                    Order o = deserialize(line);
+                    if (o != null) orders.add(o);
+                } catch (Exception e) {
+                    System.out.println("Skipping invalid order line: " + line);
+                    e.printStackTrace();
+                }
             }
             scanner.close();
             return orders;

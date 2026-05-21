@@ -1,7 +1,5 @@
 package repository;
 import enums.Category;
-import enums.OrderStatus;
-import enums.OrderType;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
