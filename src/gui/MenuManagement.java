@@ -1,15 +1,14 @@
 package gui;
 
 import enums.Category;
-import models.MenuItem;
-import models.User;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import models.MenuItem;
+import models.User;
+import repository.MenuRepository;
 
 public class MenuManagement extends JFrame {
     private static final Color BROWN = new Color(44, 30, 22);
@@ -19,10 +18,11 @@ public class MenuManagement extends JFrame {
     private static final Color TEXT_MUTED = new Color(130, 115, 105);
     private static final Color ACCENT = new Color(196, 123, 87);
     private static final Color DIVIDER = new Color(230, 225, 218);
-    private static final Color REMOVE_RED = new Color(200, 60, 60);
+    private static final Color REMOVE_RED= new Color(200, 60, 60);
     private static final Color TEAL = new Color(52, 152, 152);
 
     private final User manager;
+    private final MenuRepository menuRepo = new MenuRepository();
     private final List<MenuItem> menuItems = new ArrayList<>();
     private boolean editMode = false;
 
@@ -40,7 +40,7 @@ public class MenuManagement extends JFrame {
 
     public MenuManagement(User manager) {
         this.manager = manager;
-        seedDummyData();
+        loadFromRepository();
         setTitle("CafeSync — Menu Management  |  " + manager.getName());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 680);
@@ -49,23 +49,12 @@ public class MenuManagement extends JFrame {
         buildUI();
     }
 
-    // ── Dummy seed data ──────────────────────────────────────────────────────
-    private void seedDummyData() {
-        menuItems.add(new MenuItem("Espresso", "ITEM-001", 3.50, "Rich, bold single-shot espresso.", Category.BEVERAGE,
-                "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400", 3, 1));
-        menuItems.add(new MenuItem("Cappuccino", "ITEM-002", 4.75, "Espresso topped with velvety steamed milk foam.",
-                Category.BEVERAGE, "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=400", 5, 1));
-        menuItems.add(new MenuItem("Avocado Toast", "ITEM-003", 8.50,
-                "Sourdough toast with smashed avocado & chilli flakes.", Category.APPETIZER,
-                "https://images.unsplash.com/photo-1588137378633-dea1336ce1e2?w=400", 8, 1));
-        menuItems.add(new MenuItem("Grilled Chicken", "ITEM-004", 13.90, "Herb-marinated chicken with seasonal greens.",
-                Category.MAIN_COURSE, "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400", 18, 1));
-        menuItems
-                .add(new MenuItem("Garlic Hummus", "ITEM-005", 5.25, "Creamy hummus with roasted garlic and olive oil.",
-                        Category.DIPS, "https://images.unsplash.com/photo-1563374756-80af9ce59f80?w=400", 5, 2));
-        menuItems.add(new MenuItem("Beef Burger", "ITEM-006", 14.50,
-                "Angus beef patty with lettuce, tomato & special sauce.", Category.MAIN_COURSE,
-                "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", 15, 1));
+    private void loadFromRepository() {
+        menuItems.clear();
+        List<MenuItem> loaded = menuRepo.findAll();
+        if (loaded != null) {
+            menuItems.addAll(loaded);
+        }
     }
 
     private void buildUI() {
@@ -77,7 +66,6 @@ public class MenuManagement extends JFrame {
         setContentPane(root);
     }
 
-    // top bar
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(BROWN);
@@ -96,9 +84,7 @@ public class MenuManagement extends JFrame {
         whoLabel.setForeground(new Color(200, 180, 160));
 
         JButton analyticsBtn = makeHeaderButton("View Analytics", TEAL);
-        analyticsBtn.addActionListener(e -> {
-            new AnalyticsScreen(manager).setVisible(true);
-        });
+        analyticsBtn.addActionListener(e -> new AnalyticsScreen(manager).setVisible(true));
 
         JButton logoutBtn = makeHeaderButton("Logout", REMOVE_RED);
         logoutBtn.addActionListener(e -> {
@@ -114,16 +100,18 @@ public class MenuManagement extends JFrame {
         return bar;
     }
 
-    // centre-menu
     private JScrollPane buildMenuArea() {
-        menuGrid = new JPanel(new GridLayout(0, 3, 14, 14));
+        menuGrid = new JPanel(new GridLayout(0, 3, 14, 14));  
         menuGrid.setBackground(BEIGE);
         menuGrid.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 10));
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(BEIGE);
+        wrapper.add(menuGrid, BorderLayout.NORTH);
+        JScrollPane scroll = new JScrollPane(wrapper);
 
-        JScrollPane scroll = new JScrollPane(menuGrid);
         scroll.setBorder(null);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
         scroll.setBackground(BEIGE);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
         loadMenuGrid();
         return scroll;
     }
@@ -134,12 +122,10 @@ public class MenuManagement extends JFrame {
         for (MenuItem item : menuItems) {
             menuGrid.add(buildMenuCard(item));
         }
-
         menuGrid.revalidate();
         menuGrid.repaint();
     }
 
-    // menu card
     private JPanel buildMenuCard(MenuItem item) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
@@ -148,7 +134,7 @@ public class MenuManagement extends JFrame {
                 BorderFactory.createLineBorder(DIVIDER, 1),
                 BorderFactory.createEmptyBorder(14, 14, 14, 14)));
 
-        // image
+        // image banner
         JPanel banner = new JPanel(new BorderLayout());
         banner.setPreferredSize(new Dimension(0, 90));
         banner.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
@@ -160,21 +146,19 @@ public class MenuManagement extends JFrame {
         imgLabel.setForeground(new Color(255, 255, 255, 140));
         banner.add(imgLabel, BorderLayout.CENTER);
 
-        if (item.getImageUrl() != null && item.getImageUrl().startsWith("http")) {
-            new Thread(() -> {
-                try {
-                    URL url = java.net.URI.create(item.getImageUrl()).toURL();
-                    Image img = ImageIO.read(url);
-                    if (img != null) {
-                        Image scaled = img.getScaledInstance(220, 90, Image.SCALE_SMOOTH);
-                        SwingUtilities.invokeLater(() -> {
-                            imgLabel.setIcon(new ImageIcon(scaled));
-                            imgLabel.setText("");
-                        });
-                    }
-                } catch (Exception ignored) {
+
+        if (item.getImageUrl() != null && !item.getImageUrl().trim().isEmpty()) {
+            try {
+                ImageIcon originalImg = new ImageIcon(item.getImageUrl());
+                Image img = originalImg.getImage();
+                if (img != null) {
+                    Image scaled = img.getScaledInstance(200, 90, Image.SCALE_SMOOTH);
+                    imgLabel.setIcon(new ImageIcon(scaled));
+                    imgLabel.setText("");
                 }
-            }).start();
+            } catch (Exception e) {
+                System.out.println("Failed to load image for " + item.getItemName());
+            }
         }
 
         // details
@@ -199,9 +183,9 @@ public class MenuManagement extends JFrame {
         btnRow.setBackground(CARD_BG);
         btnRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
         btnRow.setAlignmentX(LEFT_ALIGNMENT);
-        JButton editBtn = cardBtn("Edit", BROWN);
+        JButton editBtn = cardBtn("Edit",   BROWN);
         editBtn.addActionListener(e -> populateFormForEdit(item));
-        JButton delBtn = cardBtn("Delete", REMOVE_RED);
+        JButton delBtn  = cardBtn("Delete", REMOVE_RED);
         delBtn.addActionListener(e -> deleteItem(item));
         btnRow.add(editBtn);
         btnRow.add(delBtn);
@@ -219,7 +203,6 @@ public class MenuManagement extends JFrame {
         return card;
     }
 
-    // editting panel
     private JPanel buildFormPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(CARD_BG);
@@ -312,7 +295,7 @@ public class MenuManagement extends JFrame {
         return panel;
     }
 
-    // helpers
+    //helpers
     private JTextField addField(JPanel container, String labelText) {
         addLabel(container, labelText);
         container.add(Box.createRigidArea(new Dimension(0, 4)));
@@ -388,21 +371,35 @@ public class MenuManagement extends JFrame {
             MenuItem item = new MenuItem(name, id, price, desc, cat, imageUrl, prep, serving);
 
             if (editMode) {
-                for (int i = 0; i < menuItems.size(); i++) {
-                    if (menuItems.get(i).getID().equals(item.getID())) {
-                        menuItems.set(i, item);
-                        break;
+                boolean ok = menuRepo.update(item);
+                if (ok) {
+                    for (int i = 0; i < menuItems.size(); i++) {
+                        if (menuItems.get(i).getID().equals(id)) {
+                            menuItems.set(i, item);
+                            break;
+                        }
                     }
+                    info("Item \"" + name + "\" updated successfully.");
+                } else {
+                    showError("Could not update \"" + name + "\". Item not found in database.");
+                    return;
                 }
-                info("Item \"" + name + "\" updated successfully.");
             } else {
-                menuItems.add(item);
-                info("Item \"" + name + "\" added successfully.");
+                if (menuRepo.findById(id) != null) {
+                    showError("An item with ID \"" + id + "\" already exists.");
+                    return;
+                }
+                boolean ok = menuRepo.save(item);
+                if (ok) {
+                    menuItems.add(item);
+                    info("Item \"" + name + "\" added successfully.");
+                } else {
+                    showError("Could not save \"" + name + "\" to the database.");
+                    return;
+                }
             }
-
             resetForm();
             loadMenuGrid();
-
         } catch (NumberFormatException ex) {
             showError("Price, Prep Time, and Serving Size must be valid numbers.");
         } catch (IllegalArgumentException ex) {
@@ -419,12 +416,16 @@ public class MenuManagement extends JFrame {
                 JOptionPane.WARNING_MESSAGE);
 
         if (choice == JOptionPane.YES_OPTION) {
-            menuItems.removeIf(m -> m.getID().equals(item.getID()));
-            loadMenuGrid();
+            boolean ok = menuRepo.delete(item.getID());
+            if (ok) {
+                menuItems.removeIf(m -> m.getID().equals(item.getID()));
+                loadMenuGrid();
+            } else {
+                showError("Could not delete \"" + item.getItemName() + "\" from the database.");
+            }
         }
     }
 
-    // helpers
     private JButton makeHeaderButton(String text, Color bg) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("SansSerif", Font.BOLD, 11));
