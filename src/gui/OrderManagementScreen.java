@@ -1,5 +1,7 @@
 package gui;
 
+import enums.DateRange;
+import enums.OrderStatus;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.DayOfWeek;
@@ -8,11 +10,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import models.User;
 import models.Order;
-import enums.OrderStatus;
+import models.OrderItem;
+import models.User;
 import repository.OrderRepository;
-import enums.DateRange;
 
 public class OrderManagementScreen extends JFrame {
 
@@ -251,7 +252,7 @@ public class OrderManagementScreen extends JFrame {
             order.getCustomerContact(),
             order.getOrderType().toString(),
             itemsSummary,
-            String.format("$%.2f", order.getTotalPrice()),
+            String.format("%.2f PKR", order.getTotalPrice()),
             ""
         };
 
@@ -312,25 +313,25 @@ public class OrderManagementScreen extends JFrame {
         if (status == OrderStatus.PENDING) {
             JButton accept = makeActionButton("Accept", SAGE);
             JButton cancel = makeActionButton("Cancel", ROSE);
-            accept.addActionListener(e -> { order.prepareOrder(); refreshOrders(); });
-            cancel.addActionListener(e -> { order.cancelOrder(); refreshOrders(); });
+            accept.addActionListener(e -> { order.prepareOrder(); OrderRepo.update(order);refreshOrders(); });
+            cancel.addActionListener(e -> { order.cancelOrder(); OrderRepo.update(order);refreshOrders(); });
             p.add(accept);
             p.add(cancel);
         } else if (status == OrderStatus.PREPARING) {
             JButton deliver = makeActionButton("Send Out", STEEL);
             JButton complete = makeActionButton("Complete", SAGE);
             JButton cancel = makeActionButton("Cancel", ROSE);
-            deliver.addActionListener(e -> { order.outForDelivery(); refreshOrders(); });
-            complete.addActionListener(e -> { order.completeOrder(); refreshOrders(); });
-            cancel.addActionListener(e -> { order.cancelOrder(); refreshOrders(); });
+            deliver.addActionListener(e -> { order.outForDelivery(); OrderRepo.update(order);refreshOrders(); });
+            complete.addActionListener(e -> { order.completeOrder(); OrderRepo.update(order);refreshOrders(); });
+            cancel.addActionListener(e -> { order.cancelOrder(); OrderRepo.update(order);refreshOrders(); });
             p.add(deliver);
             p.add(complete);
             p.add(cancel);
         } else if (status == OrderStatus.OUT_FOR_DELIVERY) {
             JButton complete = makeActionButton("Complete", SAGE);
             JButton cancel = makeActionButton("Cancel", ROSE);
-            complete.addActionListener(e -> { order.completeOrder(); refreshOrders(); });
-            cancel.addActionListener(e -> { order.cancelOrder(); refreshOrders(); });
+            complete.addActionListener(e -> { order.completeOrder(); OrderRepo.update(order);refreshOrders(); });
+            cancel.addActionListener(e -> { order.cancelOrder(); OrderRepo.update(order);refreshOrders(); });
             p.add(complete);
             p.add(cancel);
         } else {
@@ -365,17 +366,17 @@ public class OrderManagementScreen extends JFrame {
         return currentOrders;
     }
 
-    private String buildItemsSummary(List<?> items) {
+    private String buildItemsSummary(List<OrderItem> items) {
         if (items == null || items.isEmpty()) return "—";
-        String first = items.get(0).toString();
+        String first = items.get(0).getMenuItem().getItemName();
         if (first.length() > 22) first = first.substring(0, 20) + "…";
         return items.size() == 1 ? first : first + " +" + (items.size() - 1) + " more";
     }
 
-    private String fullItemsList(List<?> items) {
+    private String fullItemsList(List<OrderItem> items) {
         if (items == null || items.isEmpty()) return "No items";
         StringBuilder sb = new StringBuilder("<html>");
-        for (Object item : items) sb.append(item.toString()).append("<br>");
+        for (OrderItem item : items) sb.append(item.getMenuItem().getItemName()).append(" x ").append(item.getQuantity()).append("<br>");
         sb.append("</html>");
         return sb.toString();
     }
