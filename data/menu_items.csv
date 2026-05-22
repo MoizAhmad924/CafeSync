@@ -1,4 +1,8 @@
 itemName,menuItemID,price,description,category,imageUrl,preparationTime,servingSize
-Cappuccino,M001,3.5,Espresso with steamed milk and foam,BEVERAGE,https://example.com/cappuccino.jpg,5,1
-Pizza,M003,700.0,Cheesy Chicken Pizza,MAIN_COURSE,data/MenuImgs/M003.jpg,15,1
-Shawarma,M002,300.0,Chicken Shawarma wrapped in our inhouse pita and garlic sauce,MAIN_COURSE,data/MenuImgs/M002.jpg,8,1
+Classic Beef Smashed,MI1779392936839,690.0,Smashed double patty beef  with Cheese and lettuce,MAIN_COURSE,data\MenuImgs\M1.jpg,20,1
+Onion Smashed Burger,MI1779392994043,720.0,Double patty Smashed with onions and cheese,MAIN_COURSE,data\MenuImgs\M2.jpg,20,1
+Plain Fries,MI1779393036640,300.0,Plain salted fries,APPETIZER,data\MenuImgs\M3.jpg,10,1
+Loaded Fries,MI1779393089163,680.0,Fries loaded with chicken jalapenos and our signature sauces,APPETIZER,data\MenuImgs\M4.jpg,15,2
+Mint Margarita,MI1779393156355,250.0,Mint Margarita,BEVERAGE,data\MenuImgs\M6.jpg,5,1
+Chicken Wings,MI1779393189729,550.0,Baked Chicken wings,APPETIZER,data\MenuImgs\M7.jpg,15,2
+Peach Iced Tea,MI1779393126797,220.0,Peach Iced Tea,BEVERAGE,data\MenuImgs\M5.jpg,5,1

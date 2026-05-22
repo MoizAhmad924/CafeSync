@@ -1,6 +1,7 @@
 package gui;
 
 import enums.OrderType;
+import enums.PaymentMethod;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
@@ -8,7 +9,6 @@ import javax.swing.*;
 import models.Order;
 import models.OrderItem;
 import repository.OrderRepository;
-import enums.PaymentMethod;
 
 public class PaymentScreen extends JFrame {
     private static final Color BROWN = new Color(44, 30, 22);
@@ -301,6 +301,14 @@ public class PaymentScreen extends JFrame {
         PaymentMethod paymentMethod = (PaymentMethod) paymentMethodDropdown.getSelectedItem();
         boolean isOption2 = orderTypeDropdown.getSelectedIndex() == 1;
         String deliveryAddress = isOption2 ? deliveryAddressField.getText().trim() : "N/A";
+
+        // Validate delivery address when delivery is selected
+        if (orderType == OrderType.DELIVERY) {
+            if (deliveryAddress == null || deliveryAddress.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a delivery address for delivery orders.", "Missing Delivery Address", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
 
         Order newOrder = new Order(this.username, orderType, customerName.isEmpty() ? "Walk-in Customer" : customerName, contact.isEmpty() ? "N/A" : contact, deliveryAddress, orderItems);
         orderRepo.save(newOrder);
