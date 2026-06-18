@@ -24,7 +24,7 @@ public class LoginScreen extends JFrame {
         setTitle("CafeSync - Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1100, 680);
-        setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(false);
         buildUI();
     }

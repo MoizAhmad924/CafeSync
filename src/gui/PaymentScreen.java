@@ -44,7 +44,7 @@ public class PaymentScreen extends JFrame {
         setTitle("CafeSync — Payment");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(1100, 680);
-        setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(false);
         addWindowListener(new WindowAdapter() {
             @Override

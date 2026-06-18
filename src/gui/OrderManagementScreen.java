@@ -4,6 +4,7 @@ import enums.DateRange;
 import enums.OrderStatus;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -18,160 +19,366 @@ import repository.OrderRepository;
 
 public class OrderManagementScreen extends JFrame {
 
-    private static final Color BROWN        = new Color(44, 30, 22);
-    private static final Color BEIGE        = new Color(245, 242, 235);
-    private static final Color CARD_BG      = new Color(255, 255, 255);
-    private static final Color TEXT_DARK    = new Color(60, 45, 35);
-    private static final Color TEXT_MUTED   = new Color(130, 115, 105);
-    private static final Color DIVIDER      = new Color(230, 225, 218);
-    private static final Color TEAL         = new Color(52, 152, 152);
-    private static final Color AMBER        = new Color(210, 140, 50);
-    private static final Color ROSE         = new Color(185, 70, 70);
-    private static final Color SAGE         = new Color(85, 140, 100);
-    private static final Color STEEL        = new Color(90, 110, 140);
-    private static final Color ROW_HOVER    = new Color(248, 245, 240);
+    // ── Palette (shared design system) ────────────────────────────────────────
+    private static final Color SIDEBAR_BG    = new Color(26, 20, 16);
+    private static final Color SIDEBAR_HOVER = new Color(44, 34, 26);
+    private static final Color SIDEBAR_ACTIVE= new Color(55, 42, 32);
+    private static final Color CANVAS_BG     = new Color(247, 245, 241);
+    private static final Color CARD_BG       = new Color(255, 255, 255);
+    private static final Color AMBER         = new Color(212, 135, 90);
+    private static final Color AMBER_DARK    = new Color(185, 108, 62);
+    private static final Color TEXT_DARK     = new Color(28, 22, 16);
+    private static final Color TEXT_MID      = new Color(90, 75, 65);
+    private static final Color TEXT_MUTED    = new Color(155, 142, 132);
+    private static final Color BORDER_COLOR  = new Color(234, 230, 224);
+    private static final Color ROW_HOVER     = new Color(250, 248, 244);
 
-    private final User user;
-    private List<Order> allOrders;
-    private DateRange currentRange = DateRange.TODAY;
-    private OrderStatus currentStatus = OrderStatus.PENDING;
-    private JPanel ordersPanel;
-    private JLabel countLabel;
-    private JFrame parentPOS;
-    private final OrderRepository OrderRepo = new OrderRepository();
+    // Status colours
+    private static final Color SAGE  = new Color(72, 158, 100);
+    private static final Color ROSE  = new Color(196, 64, 64);
+    private static final Color STEEL = new Color(80, 110, 160);
+    private static final Color TEAL  = new Color(42, 148, 140);
+    private static final Color OCHRE = new Color(190, 138, 42);
 
-    public OrderManagementScreen(User user,JFrame parentPOS) {
-        this.user = user;
-        this.allOrders = OrderRepo.findAll();
+    // ── State ─────────────────────────────────────────────────────────────────
+    private final User    user;
+    private DateRange     currentRange  = DateRange.TODAY;
+    private OrderStatus   currentStatus = OrderStatus.PENDING;
+    private JPanel        ordersPanel;
+    private JLabel        countLabel;
+    private final JFrame  parentPOS;
+    private final OrderRepository orderRepo = new OrderRepository();
+
+    // ══════════════════════════════════════════════════════════════════════════
+    public OrderManagementScreen(User user, JFrame parentPOS) {
+        this.user      = user;
         this.parentPOS = parentPOS;
-        setTitle("CafeSync — Order Management  |  " + user.getName());
+        setTitle("CafeSync — Order Management");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1100, 680);
-        setLocationRelativeTo(null);
+        setSize(1260, 760);
+        setMinimumSize(new Dimension(1000, 600));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(true);
+        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
         buildUI();
     }
 
+    // ── Root ──────────────────────────────────────────────────────────────────
     private void buildUI() {
         JPanel root = new JPanel(new BorderLayout(0, 0));
-        root.setBackground(BEIGE);
-        root.add(buildTopBar(), BorderLayout.NORTH);
-        root.add(buildBody(), BorderLayout.CENTER);
+        root.setBackground(CANVAS_BG);
+        root.add(buildSidebar(), BorderLayout.WEST);
+        root.add(buildMainArea(), BorderLayout.CENTER);
         setContentPane(root);
     }
 
-    private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(BROWN);
-        bar.setPreferredSize(new Dimension(0, 60));
-        bar.setBorder(BorderFactory.createEmptyBorder(0, 24, 0, 24));
+    // ── Sidebar (identical structure to POS) ──────────────────────────────────
+    private JPanel buildSidebar() {
+        JPanel sidebar = new JPanel();
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.setBackground(SIDEBAR_BG);
+        sidebar.setPreferredSize(new Dimension(170, 0));
+        sidebar.setMaximumSize(new Dimension(220, Integer.MAX_VALUE));
 
-        JLabel logo = new JLabel("CafeSync  ·  Order Management");
-        logo.setFont(new Font("Serif", Font.BOLD, 22));
-        logo.setForeground(Color.WHITE);
+        // Logo
+        JPanel logoArea = new JPanel();
+        logoArea.setLayout(new BoxLayout(logoArea, BoxLayout.Y_AXIS));
+        logoArea.setBackground(SIDEBAR_BG);
+        logoArea.setAlignmentX(LEFT_ALIGNMENT);
+        logoArea.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        logoArea.setMinimumSize(new Dimension(0, 80));
+        logoArea.setBorder(BorderFactory.createEmptyBorder(22, 20, 18, 20));
 
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 12));
-        right.setOpaque(false);
+        JLabel logoText = new JLabel("CafeSync");
+        logoText.setFont(new Font("Serif", Font.BOLD, 20));
+        logoText.setForeground(Color.WHITE);
+        logoText.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel managerLabel = new JLabel("Manager: " + user.getName());
-        managerLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        managerLabel.setForeground(new Color(200, 180, 160));
+        JLabel logoSub = new JLabel("Order Management");
+        logoSub.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        logoSub.setForeground(new Color(155, 135, 115));
+        logoSub.setAlignmentX(LEFT_ALIGNMENT);
 
-        JButton backBtn = makeHeaderButton("← Back to Menu", TEAL);
-        backBtn.addActionListener(e -> goBack());
+        logoArea.add(logoText);
+        logoArea.add(Box.createRigidArea(new Dimension(0, 2)));
+        logoArea.add(logoSub);
 
-        right.add(managerLabel);
-        right.add(backBtn);
-        bar.add(logo, BorderLayout.WEST);
-        bar.add(right, BorderLayout.EAST);
-        return bar;
+        JPanel accentLine = new JPanel();
+        accentLine.setBackground(AMBER);
+        accentLine.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        accentLine.setPreferredSize(new Dimension(0, 2));
+        accentLine.setAlignmentX(LEFT_ALIGNMENT);
+
+        sidebar.add(logoArea);
+        sidebar.add(accentLine);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 16)));
+
+        // Navigation
+        sidebar.add(sidebarSectionLabel("NAVIGATION"));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 4)));
+        // "Point of Sale" nav item goes back to POS
+        sidebar.add(sidebarNavItemClickable("Point of Sale", "●", false, e -> goBack()));
+        sidebar.add(sidebarNavItem("Orders", "☰", true));
+
+        sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Session
+        sidebar.add(sidebarSectionLabel("SESSION"));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 4)));
+
+        // User identity pill
+        JPanel userPill = new JPanel();
+        userPill.setLayout(new BoxLayout(userPill, BoxLayout.X_AXIS));
+        userPill.setBackground(SIDEBAR_ACTIVE);
+        userPill.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        userPill.setAlignmentX(LEFT_ALIGNMENT);
+        userPill.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 16));
+
+        JPanel initCircle = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(AMBER);
+                g2.fillOval(0, 0, 26, 26);
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+                FontMetrics fm = g2.getFontMetrics();
+                String initial = user.getName().substring(0, 1).toUpperCase();
+                g2.drawString(initial,
+                        (26 - fm.stringWidth(initial)) / 2,
+                        (26 - fm.getHeight()) / 2 + fm.getAscent());
+            }
+        };
+        initCircle.setPreferredSize(new Dimension(26, 26));
+        initCircle.setMinimumSize(new Dimension(26, 26));
+        initCircle.setMaximumSize(new Dimension(26, 26));
+        initCircle.setOpaque(false);
+
+        JLabel nameLabel = new JLabel(user.getName());
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        nameLabel.setForeground(Color.WHITE);
+
+        userPill.add(initCircle);
+        userPill.add(Box.createRigidArea(new Dimension(10, 0)));
+        userPill.add(nameLabel);
+        userPill.add(Box.createHorizontalGlue());
+
+        sidebar.add(userPill);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 8)));
+
+        sidebar.add(sidebarNavItemClickable("← Back to POS", "⎋", false, e -> goBack()));
+
+        sidebar.add(Box.createVerticalGlue());
+
+        // Version footer
+        JPanel versionRow = new JPanel();
+        versionRow.setLayout(new BoxLayout(versionRow, BoxLayout.X_AXIS));
+        versionRow.setBackground(SIDEBAR_BG);
+        versionRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        versionRow.setAlignmentX(LEFT_ALIGNMENT);
+        versionRow.setBorder(BorderFactory.createEmptyBorder(0, 20, 14, 20));
+        JLabel version = new JLabel("v2.0  ·  CafeSync");
+        version.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        version.setForeground(new Color(80, 65, 55));
+        versionRow.add(version);
+        versionRow.add(Box.createHorizontalGlue());
+        sidebar.add(versionRow);
+
+        return sidebar;
     }
 
-    private JPanel buildBody() {
-        JPanel body = new JPanel(new BorderLayout(0, 12));
-        body.setBackground(BEIGE);
-        body.setBorder(new EmptyBorder(16, 22, 16, 22));
-        body.add(buildControlBar(), BorderLayout.NORTH);
-        body.add(buildOrdersSection(), BorderLayout.CENTER);
-        return body;
+    private JLabel sidebarSectionLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(new Font("SansSerif", Font.BOLD, 9));
+        lbl.setForeground(new Color(100, 85, 75));
+        lbl.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+        lbl.setAlignmentX(LEFT_ALIGNMENT);
+        lbl.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
+        return lbl;
     }
 
-    private JPanel buildControlBar() {
-        JPanel bar = new JPanel();
-        bar.setLayout(new BoxLayout(bar, BoxLayout.Y_AXIS));
-        bar.setOpaque(false);
+    private JPanel sidebarNavItem(String label, String icon, boolean active) {
+        return sidebarNavItemClickable(label, icon, active, null);
+    }
 
-        JPanel row1 = new JPanel(new BorderLayout());
-        row1.setOpaque(false);
+    private JPanel sidebarNavItemClickable(String label, String icon,
+                                           boolean active, ActionListener action) {
+        JPanel item = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (active) {
+                    Graphics2D g2 = (Graphics2D) g;
+                    g2.setColor(AMBER);
+                    g2.fillRect(0, 8, 3, getHeight() - 16);
+                }
+            }
+        };
+        item.setLayout(new BoxLayout(item, BoxLayout.X_AXIS));
+        item.setBackground(active ? SIDEBAR_ACTIVE : SIDEBAR_BG);
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+        item.setPreferredSize(new Dimension(220, 42));
+        item.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 16));
+        item.setAlignmentX(LEFT_ALIGNMENT);
+        item.setCursor(action != null ? new Cursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
 
-        JPanel rangeGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        rangeGroup.setOpaque(false);
-        JLabel rangeLabel = new JLabel("Date Range: ");
-        rangeLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-        rangeLabel.setForeground(TEXT_DARK);
-        rangeGroup.add(rangeLabel);
+        JLabel iconLbl = new JLabel(icon);
+        iconLbl.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        iconLbl.setForeground(active ? AMBER : new Color(155, 135, 115));
+        iconLbl.setPreferredSize(new Dimension(22, 20));
+        iconLbl.setMinimumSize(new Dimension(22, 20));
+        iconLbl.setMaximumSize(new Dimension(22, 20));
 
-        ButtonGroup rangeButtons = new ButtonGroup();
-        DateRange[] ranges = { DateRange.TODAY, DateRange.THIS_WEEK, DateRange.THIS_MONTH };
-        for (DateRange r : ranges) {
-            JToggleButton tb = makeToggleButton(r.toString());
-            if (r.equals(currentRange)) tb.setSelected(true);
-            rangeButtons.add(tb);
-            tb.addActionListener(e -> { currentRange = r; refreshOrders(); });
-            rangeGroup.add(tb);
+        JLabel nameLbl = new JLabel(label);
+        nameLbl.setFont(new Font("SansSerif", active ? Font.BOLD : Font.PLAIN, 13));
+        nameLbl.setForeground(active ? Color.WHITE : new Color(180, 165, 150));
+
+        item.add(iconLbl);
+        item.add(Box.createRigidArea(new Dimension(10, 0)));
+        item.add(nameLbl);
+        item.add(Box.createHorizontalGlue());
+
+        if (action != null) {
+            item.addMouseListener(new MouseAdapter() {
+                @Override public void mouseEntered(MouseEvent e) { item.setBackground(SIDEBAR_HOVER); }
+                @Override public void mouseExited(MouseEvent e)  { item.setBackground(active ? SIDEBAR_ACTIVE : SIDEBAR_BG); }
+                @Override public void mouseClicked(MouseEvent e) { action.actionPerformed(new ActionEvent(item, 0, "")); }
+            });
         }
+        return item;
+    }
 
-        countLabel = new JLabel();
+    // ── Main content area ─────────────────────────────────────────────────────
+    private JPanel buildMainArea() {
+        JPanel area = new JPanel(new BorderLayout(0, 0));
+        area.setBackground(CANVAS_BG);
+        area.setBorder(BorderFactory.createEmptyBorder(28, 28, 20, 28));
+
+        // Page header
+        JPanel pageHeader = new JPanel(new BorderLayout());
+        pageHeader.setBackground(CANVAS_BG);
+        pageHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+
+        JPanel titleStack = new JPanel();
+        titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
+        titleStack.setBackground(CANVAS_BG);
+
+        JLabel pageTitle = new JLabel("Orders");
+        pageTitle.setFont(new Font("Serif", Font.BOLD, 28));
+        pageTitle.setForeground(TEXT_DARK);
+        pageTitle.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel pageSub = new JLabel("Review, accept and manage incoming orders");
+        pageSub.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        pageSub.setForeground(TEXT_MUTED);
+        pageSub.setAlignmentX(LEFT_ALIGNMENT);
+
+        titleStack.add(pageTitle);
+        titleStack.add(Box.createRigidArea(new Dimension(0, 3)));
+        titleStack.add(pageSub);
+
+        countLabel = new JLabel("");
         countLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         countLabel.setForeground(TEXT_MUTED);
 
-        row1.add(rangeGroup, BorderLayout.WEST);
-        row1.add(countLabel, BorderLayout.EAST);
-        bar.add(row1);
-        bar.add(Box.createRigidArea(new Dimension(0, 8)));
+        pageHeader.add(titleStack,  BorderLayout.WEST);
+        pageHeader.add(countLabel,  BorderLayout.EAST);
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        row2.setOpaque(false);
-        JLabel statusLabel = new JLabel("Filter by Status: ");
-        statusLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-        statusLabel.setForeground(TEXT_DARK);
-        row2.add(statusLabel);
+        area.add(pageHeader,         BorderLayout.NORTH);
+        area.add(buildControlBar(),  BorderLayout.CENTER);
 
-        ButtonGroup statusButtons = new ButtonGroup();
-        OrderStatus[] statuses = { OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.COMPLETED, OrderStatus.CANCELLED };
-        for (OrderStatus s : statuses) {
-            JToggleButton tb = makeToggleButton(s == OrderStatus.OUT_FOR_DELIVERY ? "Out for Delivery" : capitalize(s.toString()));
-            tb.putClientProperty("statusKey", s);
-            if (s.equals(currentStatus)) tb.setSelected(true);
-            statusButtons.add(tb);
-            tb.addActionListener(e -> { currentStatus = s; refreshOrders(); });
-            row2.add(tb);
-        }
-
-        bar.add(row2);
-        return bar;
+        return area;
     }
 
-    private JPanel buildOrdersSection() {
-        JPanel section = new JPanel(new BorderLayout());
-        section.setOpaque(false);
+    // ── Filter / control bar ──────────────────────────────────────────────────
+    private JPanel buildControlBar() {
+        JPanel wrapper = new JPanel(new BorderLayout(0, 14));
+        wrapper.setBackground(CANVAS_BG);
 
-        String[] cols = { "Order ID", "Date", "Time", "Customer", "Contact", "Type", "Items", "Total", "Status", "Actions" };
-        int[] colWidths = { 120, 90, 70, 110, 105, 80, 160, 75, 110, 200 };
+        // ── Filter strip (date + status) ──────────────────────────────────
+        JPanel filterStrip = new JPanel();
+        filterStrip.setLayout(new BoxLayout(filterStrip, BoxLayout.Y_AXIS));
+        filterStrip.setBackground(CANVAS_BG);
 
-        JPanel headerPanel = new JPanel(new GridBagLayout());
-        headerPanel.setBackground(BROWN);
-        headerPanel.setBorder(new EmptyBorder(9, 14, 9, 14));
+        // Row 1 – date range
+        JPanel rangeRow = new JPanel();
+        rangeRow.setLayout(new BoxLayout(rangeRow, BoxLayout.X_AXIS));
+        rangeRow.setBackground(CANVAS_BG);
+        rangeRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        rangeRow.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel rangeLabel = new JLabel("Date Range");
+        rangeLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        rangeLabel.setForeground(TEXT_MID);
+        rangeRow.add(rangeLabel);
+        rangeRow.add(Box.createRigidArea(new Dimension(14, 0)));
+
+        ButtonGroup rangeGroup = new ButtonGroup();
+        DateRange[] ranges = { DateRange.TODAY, DateRange.THIS_WEEK, DateRange.THIS_MONTH };
+        for (DateRange r : ranges) {
+            JToggleButton tb = filterToggle(r.toString(), r.equals(currentRange));
+            rangeGroup.add(tb);
+            tb.addActionListener(e -> { currentRange = r; refreshOrders(); });
+            rangeRow.add(tb);
+            rangeRow.add(Box.createRigidArea(new Dimension(6, 0)));
+        }
+        rangeRow.add(Box.createHorizontalGlue());
+
+        // Row 2 – status
+        JPanel statusRow = new JPanel();
+        statusRow.setLayout(new BoxLayout(statusRow, BoxLayout.X_AXIS));
+        statusRow.setBackground(CANVAS_BG);
+        statusRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        statusRow.setAlignmentX(LEFT_ALIGNMENT);
+
+        JLabel statusLabel = new JLabel("Status");
+        statusLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        statusLabel.setForeground(TEXT_MID);
+        statusRow.add(statusLabel);
+        statusRow.add(Box.createRigidArea(new Dimension(14, 0)));
+
+        ButtonGroup statusGroup = new ButtonGroup();
+        OrderStatus[] statuses = {
+            OrderStatus.PENDING, OrderStatus.PREPARING,
+            OrderStatus.OUT_FOR_DELIVERY, OrderStatus.COMPLETED, OrderStatus.CANCELLED
+        };
+        String[] statusLabels = { "Pending", "Preparing", "Out for Delivery", "Completed", "Cancelled" };
+        for (int i = 0; i < statuses.length; i++) {
+            final OrderStatus s = statuses[i];
+            JToggleButton tb = filterToggle(statusLabels[i], s.equals(currentStatus));
+            statusGroup.add(tb);
+            tb.addActionListener(e -> { currentStatus = s; refreshOrders(); });
+            statusRow.add(tb);
+            statusRow.add(Box.createRigidArea(new Dimension(6, 0)));
+        }
+        statusRow.add(Box.createHorizontalGlue());
+
+        filterStrip.add(rangeRow);
+        filterStrip.add(Box.createRigidArea(new Dimension(0, 10)));
+        filterStrip.add(statusRow);
+
+        // ── Orders table ──────────────────────────────────────────────────
+        JPanel tableSection = new JPanel(new BorderLayout(0, 0));
+        tableSection.setBackground(CANVAS_BG);
+
+        // Table header bar
+        String[] cols      = { "Order ID", "Date", "Time", "Customer", "Contact", "Type", "Items", "Total", "Status", "Actions" };
+        int[]    colWidths = {  120,         90,     70,     110,        105,       80,     160,     80,      110,      200 };
+
+        JPanel headerBar = new JPanel(new GridBagLayout());
+        headerBar.setBackground(SIDEBAR_BG);
+        headerBar.setBorder(new EmptyBorder(10, 16, 10, 16));
+        // top rounded corners only — use a custom panel
         GridBagConstraints hgbc = new GridBagConstraints();
         hgbc.fill = GridBagConstraints.HORIZONTAL;
         hgbc.gridy = 0;
         for (int i = 0; i < cols.length; i++) {
-            hgbc.gridx = i;
-            hgbc.weightx = colWidths[i];
+            hgbc.gridx    = i;
+            hgbc.weightx  = colWidths[i];
             JLabel lbl = new JLabel(cols[i]);
             lbl.setFont(new Font("SansSerif", Font.BOLD, 11));
-            lbl.setForeground(new Color(220, 200, 180));
-            headerPanel.add(lbl, hgbc);
+            lbl.setForeground(new Color(180, 160, 140));
+            headerBar.add(lbl, hgbc);
         }
 
         ordersPanel = new JPanel();
@@ -179,18 +386,27 @@ public class OrderManagementScreen extends JFrame {
         ordersPanel.setBackground(CARD_BG);
 
         JScrollPane scroll = new JScrollPane(ordersPanel);
-        scroll.setBorder(BorderFactory.createLineBorder(DIVIDER, 1));
+        scroll.setBorder(BorderFactory.createMatteBorder(0, 1, 1, 1, BORDER_COLOR));
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll.getVerticalScrollBar().setUnitIncrement(14);
+        scroll.setBackground(CARD_BG);
+        scroll.getViewport().setBackground(CARD_BG);
 
-        section.add(headerPanel, BorderLayout.NORTH);
-        section.add(scroll, BorderLayout.CENTER);
+        tableSection.add(headerBar, BorderLayout.NORTH);
+        tableSection.add(scroll,    BorderLayout.CENTER);
+
+        // Assemble
+        JPanel body = new JPanel(new BorderLayout(0, 16));
+        body.setBackground(CANVAS_BG);
+        body.add(filterStrip,  BorderLayout.NORTH);
+        body.add(tableSection, BorderLayout.CENTER);
 
         refreshOrders();
-        return section;
+        return body;
     }
 
+    // ── Order list ────────────────────────────────────────────────────────────
     private void refreshOrders() {
         ordersPanel.removeAll();
         List<Order> filtered = getFilteredOrders();
@@ -202,11 +418,29 @@ public class OrderManagementScreen extends JFrame {
         if (filtered.isEmpty()) {
             JPanel empty = new JPanel(new BorderLayout());
             empty.setBackground(CARD_BG);
-            empty.setPreferredSize(new Dimension(0, 120));
-            JLabel msg = new JLabel("No orders found for this filter.", SwingConstants.CENTER);
-            msg.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            empty.setPreferredSize(new Dimension(0, 140));
+
+            JPanel inner = new JPanel();
+            inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
+            inner.setBackground(CARD_BG);
+
+            JLabel icon = new JLabel("⊘");
+            icon.setFont(new Font("SansSerif", Font.PLAIN, 30));
+            icon.setForeground(new Color(220, 215, 208));
+            icon.setAlignmentX(CENTER_ALIGNMENT);
+
+            JLabel msg = new JLabel("No orders found for this filter");
+            msg.setFont(new Font("SansSerif", Font.PLAIN, 13));
             msg.setForeground(TEXT_MUTED);
-            empty.add(msg, BorderLayout.CENTER);
+            msg.setAlignmentX(CENTER_ALIGNMENT);
+
+            inner.add(Box.createVerticalGlue());
+            inner.add(icon);
+            inner.add(Box.createRigidArea(new Dimension(0, 8)));
+            inner.add(msg);
+            inner.add(Box.createVerticalGlue());
+
+            empty.add(inner, BorderLayout.CENTER);
             ordersPanel.add(empty);
         } else {
             DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy");
@@ -214,8 +448,8 @@ public class OrderManagementScreen extends JFrame {
             for (int i = 0; i < filtered.size(); i++) {
                 Order o = filtered.get(i);
                 ordersPanel.add(buildOrderRow(o, dateFmt, timeFmt, i % 2 == 0));
-                JSeparator sep = new JSeparator();
-                sep.setForeground(DIVIDER);
+                JPanel sep = new JPanel();
+                sep.setBackground(BORDER_COLOR);
                 sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
                 ordersPanel.add(sep);
             }
@@ -225,25 +459,26 @@ public class OrderManagementScreen extends JFrame {
         ordersPanel.repaint();
     }
 
-    private JPanel buildOrderRow(Order order, DateTimeFormatter dateFmt, DateTimeFormatter timeFmt, boolean even) {
+    private JPanel buildOrderRow(Order order, DateTimeFormatter dateFmt,
+                                  DateTimeFormatter timeFmt, boolean even) {
         JPanel row = new JPanel(new GridBagLayout());
-        row.setBackground(even ? CARD_BG : new Color(250, 248, 244));
-        row.setBorder(new EmptyBorder(10, 14, 10, 14));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
+        row.setBackground(even ? CARD_BG : new Color(251, 249, 246));
+        row.setBorder(new EmptyBorder(11, 16, 11, 16));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 58));
 
         row.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { row.setBackground(ROW_HOVER); }
-            public void mouseExited(MouseEvent e)  { row.setBackground(even ? CARD_BG : new Color(250, 248, 244)); }
+            @Override public void mouseEntered(MouseEvent e) { row.setBackground(ROW_HOVER); }
+            @Override public void mouseExited(MouseEvent e)  { row.setBackground(even ? CARD_BG : new Color(251, 249, 246)); }
         });
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill  = GridBagConstraints.HORIZONTAL;
         gbc.gridy = 0;
-        int[] colWidths = { 120, 90, 70, 110, 105, 80, 160, 75, 110, 200 };
+        int[] colWidths = { 120, 90, 70, 110, 105, 80, 160, 80, 110, 200 };
 
         String itemsSummary = buildItemsSummary(order.getOrderItems());
-        String statusStr = order.getOrderStatus().toString();
-        Color statusColor = statusColor(order.getOrderStatus());
+        Color  statusColor  = statusColor(order.getOrderStatus());
+        String statusStr    = order.getOrderStatus().toString().replace("_", " ");
 
         Object[] cells = {
             order.getOrderID(),
@@ -253,28 +488,25 @@ public class OrderManagementScreen extends JFrame {
             order.getCustomerContact(),
             order.getOrderType().toString(),
             itemsSummary,
-            String.format("%.2f PKR", order.getTotalPrice()),
-            ""
+            String.format("PKR %.0f", order.getTotalPrice()),
+            ""   // status badge placeholder
         };
 
         for (int i = 0; i < cells.length; i++) {
-            gbc.gridx = i;
+            gbc.gridx   = i;
             gbc.weightx = colWidths[i];
             if (i == 8) {
-                JLabel badge = makeStatusBadge(statusStr, statusColor);
-                row.add(badge, gbc);
+                row.add(makeStatusBadge(statusStr, statusColor), gbc);
             } else {
                 JLabel lbl = new JLabel(cells[i].toString());
                 lbl.setFont(new Font("SansSerif", i == 0 ? Font.BOLD : Font.PLAIN, 12));
                 lbl.setForeground(i == 0 ? TEXT_DARK : TEXT_MUTED);
-                if (i == 6) {
-                    lbl.setToolTipText(fullItemsList(order.getOrderItems()));
-                }
+                if (i == 6) lbl.setToolTipText(fullItemsList(order.getOrderItems()));
                 row.add(lbl, gbc);
             }
         }
 
-        gbc.gridx = 9;
+        gbc.gridx   = 9;
         gbc.weightx = colWidths[9];
         row.add(buildActionPanel(order), gbc);
 
@@ -282,16 +514,16 @@ public class OrderManagementScreen extends JFrame {
     }
 
     private JLabel makeStatusBadge(String status, Color color) {
-        JLabel lbl = new JLabel(status.replace("_", " ")) {
-            protected void paintComponent(Graphics g) {
+        JLabel lbl = new JLabel(status) {
+            @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 28));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 22));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
                 g2.setColor(color);
                 g2.setFont(getFont());
                 FontMetrics fm = g2.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int x = (getWidth()  - fm.stringWidth(getText())) / 2;
                 int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
                 g2.drawString(getText(), x, y);
                 g2.dispose();
@@ -299,8 +531,8 @@ public class OrderManagementScreen extends JFrame {
         };
         lbl.setFont(new Font("SansSerif", Font.BOLD, 10));
         lbl.setForeground(color);
-        lbl.setPreferredSize(new Dimension(100, 22));
-        lbl.setMaximumSize(new Dimension(100, 22));
+        lbl.setPreferredSize(new Dimension(108, 22));
+        lbl.setMaximumSize(new Dimension(108, 22));
         lbl.setHorizontalAlignment(SwingConstants.CENTER);
         lbl.setOpaque(false);
         return lbl;
@@ -314,63 +546,60 @@ public class OrderManagementScreen extends JFrame {
         if (status == OrderStatus.PENDING) {
             JButton accept = makeActionButton("Accept", SAGE);
             JButton cancel = makeActionButton("Cancel", ROSE);
-            accept.addActionListener(e -> { order.prepareOrder(); OrderRepo.update(order);refreshOrders(); });
-            cancel.addActionListener(e -> { order.cancelOrder(); OrderRepo.update(order);refreshOrders(); });
-            p.add(accept);
-            p.add(cancel);
+            accept.addActionListener(e -> { order.prepareOrder();   orderRepo.update(order); refreshOrders(); });
+            cancel.addActionListener(e -> { order.cancelOrder();    orderRepo.update(order); refreshOrders(); });
+            p.add(accept); p.add(cancel);
+
         } else if (status == OrderStatus.PREPARING) {
-            JButton deliver = makeActionButton("Send Out", STEEL);
+            JButton deliver  = makeActionButton("Send Out", STEEL);
             JButton complete = makeActionButton("Complete", SAGE);
-            JButton cancel = makeActionButton("Cancel", ROSE);
-            deliver.addActionListener(e -> { order.outForDelivery(); OrderRepo.update(order);refreshOrders(); });
-            complete.addActionListener(e -> { order.completeOrder(); OrderRepo.update(order);refreshOrders(); });
-            cancel.addActionListener(e -> { order.cancelOrder(); OrderRepo.update(order);refreshOrders(); });
-            p.add(deliver);
-            p.add(complete);
-            p.add(cancel);
+            JButton cancel   = makeActionButton("Cancel",   ROSE);
+            deliver.addActionListener(e ->  { order.outForDelivery(); orderRepo.update(order); refreshOrders(); });
+            complete.addActionListener(e -> { order.completeOrder();  orderRepo.update(order); refreshOrders(); });
+            cancel.addActionListener(e ->   { order.cancelOrder();    orderRepo.update(order); refreshOrders(); });
+            p.add(deliver); p.add(complete); p.add(cancel);
+
         } else if (status == OrderStatus.OUT_FOR_DELIVERY) {
             JButton complete = makeActionButton("Complete", SAGE);
-            JButton cancel = makeActionButton("Cancel", ROSE);
-            complete.addActionListener(e -> { order.completeOrder(); OrderRepo.update(order);refreshOrders(); });
-            cancel.addActionListener(e -> { order.cancelOrder(); OrderRepo.update(order);refreshOrders(); });
-            p.add(complete);
-            p.add(cancel);
+            JButton cancel   = makeActionButton("Cancel",   ROSE);
+            complete.addActionListener(e -> { order.completeOrder(); orderRepo.update(order); refreshOrders(); });
+            cancel.addActionListener(e ->   { order.cancelOrder();   orderRepo.update(order); refreshOrders(); });
+            p.add(complete); p.add(cancel);
+
         } else {
             JLabel done = new JLabel(status == OrderStatus.COMPLETED ? "✓ Completed" : "✗ Cancelled");
             done.setFont(new Font("SansSerif", Font.PLAIN, 11));
             done.setForeground(TEXT_MUTED);
             p.add(done);
         }
-
         return p;
     }
 
+    // ── Unchanged business logic ───────────────────────────────────────────────
     public List<Order> getFilteredOrders() {
         LocalDate startDate = null;
-        LocalDate endDate = null;
-        
+        LocalDate endDate   = null;
+
         switch (currentRange) {
             case DateRange.TODAY:
                 startDate = LocalDate.now();
-                endDate = LocalDate.now();
+                endDate   = LocalDate.now();
                 break;
             case DateRange.THIS_WEEK:
                 startDate = LocalDate.now().with(DayOfWeek.MONDAY);
-                endDate = startDate.plusDays(6);
+                endDate   = startDate.plusDays(6);
                 break;
             case DateRange.THIS_MONTH:
                 startDate = LocalDate.now().withDayOfMonth(1);
-                endDate = startDate.plusMonths(1).minusDays(1);
+                endDate   = startDate.plusMonths(1).minusDays(1);
                 break;
         }
-        List<Order> currentOrders = OrderRepo.findOrdersInRange(startDate, endDate);
-        List<Order> filtered = new ArrayList<>();
-        for (Order o : currentOrders) {
-            if (o.getOrderStatus() == currentStatus) {
-                filtered.add(o);
-            }
-        }
 
+        List<Order> currentOrders = orderRepo.findOrdersInRange(startDate, endDate);
+        List<Order> filtered      = new ArrayList<>();
+        for (Order o : currentOrders) {
+            if (o.getOrderStatus() == currentStatus) filtered.add(o);
+        }
         return filtered;
     }
 
@@ -384,7 +613,8 @@ public class OrderManagementScreen extends JFrame {
     private String fullItemsList(List<OrderItem> items) {
         if (items == null || items.isEmpty()) return "No items";
         StringBuilder sb = new StringBuilder("<html>");
-        for (OrderItem item : items) sb.append(item.getMenuItem().getItemName()).append(" x ").append(item.getQuantity()).append("<br>");
+        for (OrderItem item : items)
+            sb.append(item.getMenuItem().getItemName()).append(" x ").append(item.getQuantity()).append("<br>");
         sb.append("</html>");
         return sb.toString();
     }
@@ -393,7 +623,7 @@ public class OrderManagementScreen extends JFrame {
         return switch (status) {
             case COMPLETED        -> SAGE;
             case CANCELLED        -> ROSE;
-            case PREPARING        -> AMBER;
+            case PREPARING        -> OCHRE;
             case OUT_FOR_DELIVERY -> STEEL;
             default               -> new Color(160, 130, 80);
         };
@@ -404,25 +634,31 @@ public class OrderManagementScreen extends JFrame {
         return s.charAt(0) + s.substring(1).toLowerCase();
     }
 
-    private JToggleButton makeToggleButton(String text) {
+    // ── Widget helpers ────────────────────────────────────────────────────────
+    private JToggleButton filterToggle(String text, boolean selected) {
         JToggleButton btn = new JToggleButton(text) {
-            protected void paintComponent(Graphics g) {
+            @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(isSelected() ? BROWN : CARD_BG);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
-                g2.setColor(isSelected() ? Color.WHITE : TEXT_MUTED);
+                g2.setColor(isSelected() ? SIDEBAR_BG : CARD_BG);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
+                if (!isSelected()) {
+                    g2.setColor(BORDER_COLOR);
+                    g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 8, 8));
+                }
+                g2.setColor(isSelected() ? Color.WHITE : TEXT_MID);
                 g2.setFont(getFont());
                 FontMetrics fm = g2.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int x = (getWidth()  - fm.stringWidth(getText())) / 2;
                 int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
                 g2.drawString(getText(), x, y);
                 g2.dispose();
             }
         };
+        btn.setSelected(selected);
         btn.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        int w = text.length() * 8 + 20;
-        btn.setPreferredSize(new Dimension(Math.max(80, w), 28));
+        int w = text.length() * 8 + 24;
+        btn.setPreferredSize(new Dimension(Math.max(80, w), 30));
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setContentAreaFilled(false);
@@ -432,24 +668,25 @@ public class OrderManagementScreen extends JFrame {
 
     private JButton makeActionButton(String text, Color color) {
         JButton btn = new JButton(text) {
-            protected void paintComponent(Graphics g) {
+            @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getModel().isRollover()
+                boolean hovered = getModel().isRollover();
+                g2.setColor(hovered
                         ? color
-                        : new Color(color.getRed(), color.getGreen(), color.getBlue(), 30));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(getModel().isRollover() ? Color.WHITE : color);
+                        : new Color(color.getRed(), color.getGreen(), color.getBlue(), 28));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
+                g2.setColor(hovered ? Color.WHITE : color);
                 g2.setFont(getFont());
                 FontMetrics fm = g2.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                int x = (getWidth()  - fm.stringWidth(getText())) / 2;
                 int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
                 g2.drawString(getText(), x, y);
                 g2.dispose();
             }
         };
         btn.setFont(new Font("SansSerif", Font.BOLD, 11));
-        btn.setPreferredSize(new Dimension(74, 26));
+        btn.setPreferredSize(new Dimension(76, 27));
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
         btn.setContentAreaFilled(false);
@@ -457,17 +694,6 @@ public class OrderManagementScreen extends JFrame {
         return btn;
     }
 
-    private JButton makeHeaderButton(String text, Color bg) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 11));
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return btn;
-    }
     private void goBack() {
         dispose();
         parentPOS.setVisible(true);
